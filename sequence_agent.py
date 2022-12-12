@@ -16,8 +16,6 @@
 These classes are not intended to change as they are generic enough for any
 all-neural actor based agent+policy. All new features are intended to be
 implemented in `actor_network` and `loss_fn`.
-
-# TODO(b/231896343): Update litred docs on how to use these.
 """
 from typing import Optional, Type
 
