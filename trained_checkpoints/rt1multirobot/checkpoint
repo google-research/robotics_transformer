@@ -1,0 +1,2 @@
+model_checkpoint_path: "/cns/tp-d/home/karolhausman-brain/karolhausman/rs=6.3:sl=48M/ttl=12w:gc=0/xm_fractal_experiment_46830388/1/train/policy/00589960/ckpt-589960"
+all_model_checkpoint_paths: "/cns/tp-d/home/karolhausman-brain/karolhausman/rs=6.3:sl=48M/ttl=12w:gc=0/xm_fractal_experiment_46830388/1/train/policy/00589960/ckpt-589960"

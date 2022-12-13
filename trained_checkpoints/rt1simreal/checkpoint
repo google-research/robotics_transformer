@@ -1,0 +1,2 @@
+model_checkpoint_path: "/cns/tp-d/home/tedxiao-brain/tedxiao/rs=6.3:sl=48M/ttl=12w:gc=0/paper_simreal_0817data_100sim_1v2_experiment_45838476/1/train/policy/000660240/ckpt-660240"
+all_model_checkpoint_paths: "/cns/tp-d/home/tedxiao-brain/tedxiao/rs=6.3:sl=48M/ttl=12w:gc=0/paper_simreal_0817data_100sim_1v2_experiment_45838476/1/train/policy/000660240/ckpt-660240"

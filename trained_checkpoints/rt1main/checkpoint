@@ -1,0 +1,2 @@
+model_checkpoint_path: "/cns/tp-d/home/kanishkarao-brain/kanishkarao/rs=6.3:sl=48M/ttl=12w:gc=0/xm_fractal_experiment_47030250/1/train/policy/000424760/ckpt-424760"
+all_model_checkpoint_paths: "/cns/tp-d/home/kanishkarao-brain/kanishkarao/rs=6.3:sl=48M/ttl=12w:gc=0/xm_fractal_experiment_47030250/1/train/policy/000424760/ckpt-424760"
