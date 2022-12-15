@@ -36,9 +36,10 @@ bazel test ...
 
 ### Using trained checkpoints
 Checkpoints are included in trained_checkpoints/ folder for three models:
-1. RT-1 trained on 700 tasks
-2. RT-1 jointly trained on EDR and Kuka data
-3. RT-1 jointly trained on sim and real data
+1. [RT-1 trained on 700 tasks](trained_checkpoints/rt1main)
+2. [RT-1 jointly trained on EDR and Kuka data](trained_checkpoints/rt1multirobot)
+3. [RT-1 jointly trained on sim and real data](trained_checkpoints/rt1simreal)
+
 They are tensorflow SavedModel files. Instructions on usage can be found [here](https://www.tensorflow.org/guide/saved_model)
 
 
