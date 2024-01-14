@@ -1,0 +1,10 @@
+{
+    "summary": "The code configures a TransformerNetwork for an actor-critic model in robotics. It uses Adam optimizer with a learning rate of 0.0001, has 8 layers with 128 neurons each and 8 attention heads. The time sequence length is set to SEQUENCE_LENGTH, and the model uses token embedding with size 512. Additionally, it utilizes an image tokenizer, and a specified crop size and action order are used.",
+    "details": [
+        {
+            "comment": "The code configures a TransformerNetwork for an actor-critic model in robotics. It uses Adam optimizer with a learning rate of 0.0001, has 8 layers with 128 neurons each and 8 attention heads. The time sequence length is set to SEQUENCE_LENGTH, and the model uses token embedding with size 512. Additionally, it utilizes an image tokenizer, and a specified crop size and action order are used.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/configs/transformer_mixin.gin\":0-26",
+            "content": "from __gin__ import dynamic_registration\nfrom robotics_transformer import transformer_network\nfrom robotics_transformer.tokenizers import image_tokenizer\nimport tensorflow as tf\nLEARNING_RATE_ACTOR = 0.0001\nSEQUENCE_LENGTH = 6\ntransformer_network.TransformerNetwork:\n  num_layers = 8\n  layer_size = 128\n  num_heads = 8\n  feed_forward_size = 512\n  dropout_rate = 0.1\n  vocab_size = 256\n  token_embedding_size = 512\n  time_sequence_length = %SEQUENCE_LENGTH\n  crop_size = %CROP_SIZE\n  action_order = %ACTION_ORDER\n  use_token_learner = True\nactor_optimizer/tf.keras.optimizers.Adam:\n  learning_rate = %LEARNING_RATE_ACTOR\nACTOR_NETWORK = @transformer_network.TransformerNetwork\nACTOR_OPTIMIZER = @actor_optimizer/tf.keras.optimizers.Adam()"
+        }
+    ]
+}

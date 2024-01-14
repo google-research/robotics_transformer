@@ -1,0 +1,150 @@
+{
+    "url": {
+        "full": "https://github.com/google-research/robotics_transformer",
+        "partial": "google-research/robotics_transformer"
+    },
+    "file_mapping": {
+        "0": {
+            "filepath": "/README.md",
+            "entry_id": 0,
+            "language_id": "markdown"
+        },
+        "1": {
+            "filepath": "/__init__.py",
+            "entry_id": 6,
+            "language_id": "python"
+        },
+        "2": {
+            "filepath": "/configs/transformer_mixin.gin",
+            "entry_id": 10,
+            "language_id": "text"
+        },
+        "3": {
+            "filepath": "/film_efficientnet/__init__.py",
+            "entry_id": 14,
+            "language_id": "python"
+        },
+        "4": {
+            "filepath": "/film_efficientnet/film_conditioning_layer.py",
+            "entry_id": 18,
+            "language_id": "python"
+        },
+        "5": {
+            "filepath": "/film_efficientnet/film_conditioning_layer_test.py",
+            "entry_id": 26,
+            "language_id": "python"
+        },
+        "6": {
+            "filepath": "/film_efficientnet/film_efficientnet_encoder.py",
+            "entry_id": 32,
+            "language_id": "python"
+        },
+        "7": {
+            "filepath": "/film_efficientnet/film_efficientnet_encoder_test.py",
+            "entry_id": 86,
+            "language_id": "python"
+        },
+        "8": {
+            "filepath": "/film_efficientnet/preprocessors.py",
+            "entry_id": 94,
+            "language_id": "python"
+        },
+        "9": {
+            "filepath": "/film_efficientnet/preprocessors_test.py",
+            "entry_id": 106,
+            "language_id": "python"
+        },
+        "10": {
+            "filepath": "/film_efficientnet/pretrained_efficientnet_encoder.py",
+            "entry_id": 116,
+            "language_id": "python"
+        },
+        "11": {
+            "filepath": "/film_efficientnet/pretrained_efficientnet_encoder_test.py",
+            "entry_id": 128,
+            "language_id": "python"
+        },
+        "12": {
+            "filepath": "/requirements.txt",
+            "entry_id": 134,
+            "language_id": "plain-text"
+        },
+        "13": {
+            "filepath": "/sequence_agent.py",
+            "entry_id": 138,
+            "language_id": "python"
+        },
+        "14": {
+            "filepath": "/sequence_agent_test.py",
+            "entry_id": 154,
+            "language_id": "python"
+        },
+        "15": {
+            "filepath": "/sequence_agent_test_set_up.py",
+            "entry_id": 158,
+            "language_id": "python"
+        },
+        "16": {
+            "filepath": "/tokenizers/__init__.py",
+            "entry_id": 170,
+            "language_id": "python"
+        },
+        "17": {
+            "filepath": "/tokenizers/action_tokenizer.py",
+            "entry_id": 174,
+            "language_id": "python"
+        },
+        "18": {
+            "filepath": "/tokenizers/action_tokenizer_test.py",
+            "entry_id": 190,
+            "language_id": "python"
+        },
+        "19": {
+            "filepath": "/tokenizers/image_tokenizer.py",
+            "entry_id": 208,
+            "language_id": "python"
+        },
+        "20": {
+            "filepath": "/tokenizers/image_tokenizer_test.py",
+            "entry_id": 218,
+            "language_id": "python"
+        },
+        "21": {
+            "filepath": "/tokenizers/token_learner.py",
+            "entry_id": 224,
+            "language_id": "python"
+        },
+        "22": {
+            "filepath": "/tokenizers/token_learner_test.py",
+            "entry_id": 236,
+            "language_id": "python"
+        },
+        "23": {
+            "filepath": "/transformer.py",
+            "entry_id": 242,
+            "language_id": "python"
+        },
+        "24": {
+            "filepath": "/transformer_network.py",
+            "entry_id": 256,
+            "language_id": "python"
+        },
+        "25": {
+            "filepath": "/transformer_network_test.py",
+            "entry_id": 314,
+            "language_id": "python"
+        },
+        "26": {
+            "filepath": "/transformer_network_test_set_up.py",
+            "entry_id": 336,
+            "language_id": "python"
+        },
+        "27": {
+            "filepath": "/transformer_test.py",
+            "entry_id": 368,
+            "language_id": "python"
+        }
+    },
+    "project_name": "robotics_transformer",
+    "split_count": 4
+}

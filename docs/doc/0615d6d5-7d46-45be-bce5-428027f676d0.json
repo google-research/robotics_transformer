@@ -1,0 +1,15 @@
+{
+    "summary": "This code tests the transformer model in robotics_transformer library using a TransformerTest class. It defines a forward pass test function with parameters for attention scores, checking input/output shapes and attention scores as required.",
+    "details": [
+        {
+            "comment": "This code is for testing the transformer model in the robotics_transformer library. It imports necessary modules, sets up variables like vocab size and creates a random input tensor. The class TransformerTest extends parameterized.TestCase for running tests with different parameters.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/transformer_test.py\":0-31",
+            "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for transformer.\"\"\"\nfrom absl.testing import parameterized\nfrom robotics_transformer import transformer\nimport tensorflow as tf\nclass TransformerTest(parameterized.TestCase):\n  def setUp(self):\n    self._vocab_size = 10\n    batch_size = 8\n    sequence_len = 12\n    self._tokens = tf.random.uniform(\n        [batch_size, sequence_len, self._vocab_size],\n        minval=0,\n        maxval=1,\n        dtype=tf.dtypes.float32,\n    )\n    super(TransformerTest, self).setUp()"
+        },
+        {
+            "comment": "This code defines a test function for the forward pass of a Transformer model. It takes a boolean parameter to determine if attention scores should be returned. The test asserts the shape of input and output tokens, and checks if attention scores are returned based on the parameter value.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/transformer_test.py\":33-54",
+            "content": "  @parameterized.parameters(True, False)\n  def test_transformer_forwardpass(self, return_attention_scores):\n    network = transformer.Transformer(\n        num_layers=2,\n        layer_size=512,\n        num_heads=4,\n        feed_forward_size=256,\n        dropout_rate=0.1,\n        vocab_size=self._vocab_size,\n        return_attention_scores=return_attention_scores)\n    output_tokens, attention_scores = network(self._tokens, attention_mask=None)\n    self.assertSequenceEqual(self._tokens.shape.as_list(),\n                             output_tokens.shape.as_list())\n    if return_attention_scores:\n      self.assertNotEmpty(attention_scores)\n    else:\n      self.assertEmpty(attention_scores)\nif __name__ == '__main__':\n  tf.test.main()"
+        }
+    ]
+}

@@ -1,0 +1,10 @@
+{
+    "summary": "This code sets the version of the robotics_transformer library to 0.1.0, licensed under Apache License 2.0, and mentions that a new PyPI release will be created whenever the version is changed.",
+    "details": [
+        {
+            "comment": "This code sets the version of the robotics_transformer library to 0.1.0, licensed under Apache License 2.0, and mentions that a new PyPI release will be created whenever the version is changed.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/__init__.py\":0-17",
+            "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"robotics_transformer API.\"\"\"\n# A new PyPI release will be pushed everytime `__version__` is increased\n# When changing this, also update the CHANGELOG.md\n__version__ = '0.1.0'"
+        }
+    ]
+}

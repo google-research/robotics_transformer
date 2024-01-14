@@ -1,0 +1,10 @@
+{
+    "summary": "This is a requirements file for the robotics_transformer project, listing dependencies including absl-py, numpy, tensorflow, tensorflow-serving-api, gin-config, tf-agents, and tf-slim. It also includes a git repository for tensor2robot integration.",
+    "details": [
+        {
+            "comment": "This is a requirements file for the robotics_transformer project, listing dependencies including absl-py, numpy, tensorflow, tensorflow-serving-api, gin-config, tf-agents, and tf-slim. It also includes a git repository for tensor2robot integration.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/requirements.txt\":0-8",
+            "content": "absl-py>=0.5.0\nnumpy>=1.13.3\ntensorflow>=1.13.0\ntensorflow-serving-api>=1.13.0\ngin-config>=0.1.4\ntensorflow-probability>=0.6.0\ntf-agents>=0.3.0\ntf-slim>=1.0\ngit+https://github.com/google-research/tensor2robot#tensor2robot"
+        }
+    ]
+}

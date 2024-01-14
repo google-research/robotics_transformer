@@ -1,0 +1,6 @@
+.*
+LICENSE
+CONTRIBUTING.md
+trained_checkpoints
+film_efficientnet/efficientnet_checkpoints
+docs

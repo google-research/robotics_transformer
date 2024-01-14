@@ -1,0 +1,546 @@
+{
+    "200": {
+        "file_id": 18,
+        "content": "        action_tokens.shape.as_list())\n  def testTokenize_float_at_limits(self):\n    minimum = -1.\n    maximum = 1.\n    vocab_size = 10\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.world_vector = tensor_spec.BoundedTensorSpec(\n        (2,),\n        dtype=tf.float32,\n        minimum=minimum,\n        maximum=maximum,\n        name='world_vector')\n    tokenizer = action_tokenizer.RT1ActionTokenizer(\n        action_spec, vocab_size=vocab_size)\n    self.assertEqual(2, tokenizer.tokens_per_action)\n    action = tensorspec_utils.TensorSpecStruct(world_vector=[minimum, maximum])\n    action_tokens = tokenizer.tokenize(action)\n    # Minimum value will go to 0\n    # Maximum value witll go to vocab_size-1\n    self.assertSequenceEqual([0, vocab_size - 1], list(action_tokens.numpy()))\n  def testTokenize_invalid_action_spec_shape(self):\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.world_vector = tensor_spec.BoundedTensorSpec(\n        (2, 2), dtype=tf.float32, minimum=1, maximum=-1, name='world_vector')",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer_test.py:85-110"
+    },
+    "201": {
+        "file_id": 18,
+        "content": "The code defines two functions `testTokenize_float_at_limits` and `testTokenize_invalid_action_spec_shape`. The first function tests the tokenization of actions with float values at their limits, ensuring that minimum value maps to 0 and maximum value maps to vocab_size-1. The second function tests tokenizing an action with an invalid shape for its action specification.",
+        "type": "comment"
+    },
+    "202": {
+        "file_id": 18,
+        "content": "    with self.assertRaises(ValueError):\n      action_tokenizer.RT1ActionTokenizer(action_spec, vocab_size=10)\n  def testTokenizeAndDetokenizeIsEqual(self):\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.world_vector = tensor_spec.BoundedTensorSpec(\n        (3,), dtype=tf.float32, minimum=-1., maximum=1., name='world_vector')\n    action_spec.rotation_delta = tensor_spec.BoundedTensorSpec(\n        (3,),\n        dtype=tf.float32,\n        minimum=-np.pi / 2.,\n        maximum=np.pi / 2.,\n        name='rotation_delta')\n    action_spec.gripper_closedness_action = tensor_spec.BoundedTensorSpec(\n        (1,),\n        dtype=tf.float32,\n        minimum=-1.,\n        maximum=1.,\n        name='gripper_closedness_action')\n    num_sub_action_space = 2\n    action_spec.terminate_episode = tensor_spec.BoundedTensorSpec(\n        (num_sub_action_space,),\n        dtype=tf.int32,\n        minimum=0,\n        maximum=1,\n        name='terminate_episode')\n    tokenizer = action_tokenizer.RT1ActionTokenizer(\n        action_spec,",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer_test.py:111-143"
+    },
+    "203": {
+        "file_id": 18,
+        "content": "The code is testing the action tokenizer's tokenize and detokenize methods to ensure they are equal. The code creates an action specification for a robotics task, including various bounded tensor specifications such as world vector, rotation delta, gripper closedness action, terminate episode, etc., and tests the tokenizer with a vocabulary size of 10. It also checks if there is a ValueError raised when creating an RT1ActionTokenizer object with specified action_spec and vocab_size.",
+        "type": "comment"
+    },
+    "204": {
+        "file_id": 18,
+        "content": "        vocab_size=1024,\n        action_order=[\n            'terminate_episode', 'world_vector', 'rotation_delta',\n            'gripper_closedness_action'\n        ])\n    self.assertEqual(8, tokenizer.tokens_per_action)\n    # Repeat the following test N times with fuzzy inputs.\n    n_repeat = 10\n    for _ in range(n_repeat):\n      action = tensorspec_utils.TensorSpecStruct(\n          world_vector=np.random.uniform(low=-1., high=1.0, size=3),\n          rotation_delta=np.random.uniform(\n              low=-np.pi / 2., high=np.pi / 2., size=3),\n          gripper_closedness_action=np.random.uniform(low=0., high=1.0, size=1),\n          terminate_episode=[0, 1])\n      action_tokens = tokenizer.tokenize(action)\n      policy_action = tokenizer.detokenize(action_tokens)\n      for k in action:\n        self.assertSequenceAlmostEqual(\n            action[k], policy_action[k].numpy(), places=2)\n      # Repeat the test with batched actions\n      batched_action = tensorspec_utils.TensorSpecStruct(\n          world_vector=[\n              np.random.uniform(low=-1., high=1.0, size=3),",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer_test.py:144-170"
+    },
+    "205": {
+        "file_id": 18,
+        "content": "This code tests the tokenizer class in the action_tokenizer_test.py file, ensuring it correctly tokenizes and detokenizes actions. It performs these tests 10 times with randomized inputs for better accuracy. The code asserts that the tokenized and detokenized values are nearly equal to the original action values, checking each component separately.",
+        "type": "comment"
+    },
+    "206": {
+        "file_id": 18,
+        "content": "              np.random.uniform(low=-1., high=1.0, size=3)\n          ],\n          rotation_delta=[\n              np.random.uniform(low=-np.pi / 2., high=np.pi / 2., size=3),\n              np.random.uniform(low=-np.pi / 2., high=np.pi / 2., size=3)\n          ],\n          gripper_closedness_action=[\n              np.random.uniform(low=0., high=1.0, size=1),\n              np.random.uniform(low=0., high=1.0, size=1)\n          ],\n          terminate_episode=[[0, 1], [1, 0]])\n      action_tokens = tokenizer.tokenize(batched_action)\n      policy_action = tokenizer.detokenize(action_tokens)\n      for k in batched_action:\n        for a, policy_a in zip(batched_action[k], policy_action[k].numpy()):\n          self.assertSequenceAlmostEqual(a, policy_a, places=2)\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer_test.py:171-191"
+    },
+    "207": {
+        "file_id": 18,
+        "content": "This code is initializing a random action for a robotics transformer tokenizer test. It generates three random translation values, two rotation deltas, and two gripper closedness actions. The tokenizer then tokenizes the batched action and detokenizes it to create policy_action. Finally, the code compares the original action with the detokenized policy_action using assertSequenceAlmostEqual function.",
+        "type": "comment"
+    },
+    "208": {
+        "file_id": 19,
+        "content": "/tokenizers/image_tokenizer.py",
+        "type": "filepath"
+    },
+    "209": {
+        "file_id": 19,
+        "content": "This class defines `RT1ImageTokenizer` for image tokenization with EfficientNet and an optional token learner. It outputs the tokens_per_context_image, based on learned tokens or default 81. The function extracts embeddings from images using the tokenizer, reshapes the tokens into a 3D tensor, and returns the desired shaped image tokens.",
+        "type": "summary"
+    },
+    "210": {
+        "file_id": 19,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"A FiLM Efficientnet contextual image tokenizer used in Robotics Transformer 1.\n\"\"\"\nfrom typing import Optional\nfrom robotics_transformer.film_efficientnet import pretrained_efficientnet_encoder\nfrom robotics_transformer.tokenizers import token_learner\nimport tensorflow as tf\nclass RT1ImageTokenizer(tf.keras.layers.Layer):\n  \"\"\"Tokenizes based on vocab size.\"\"\"\n  def __init__(self,\n               embedding_output_dim: int,\n               use_token_learner: bool = False,",
+        "type": "code",
+        "location": "/tokenizers/image_tokenizer.py:1-27"
+    },
+    "211": {
+        "file_id": 19,
+        "content": "This code defines a class `RT1ImageTokenizer` for image tokenization based on vocabulary size. It uses the EfficientNet model from the `robotics_transformer.film_efficientnet` module and optionally includes a `token_learner`. The embedding output dimension can be specified as an input parameter.",
+        "type": "comment"
+    },
+    "212": {
+        "file_id": 19,
+        "content": "               num_tokens: int = 8,\n               **kwargs):\n    \"\"\"Instantiates a RT1ImageTokenizer.\n    Args:\n      embedding_output_dim: The output size of the tokens.\n      use_token_learner: Whether to use token learner. See\n        https://arxiv.org/abs/2106.11297\n      num_tokens: Relevant only for token learner - the number of learned\n        tokens.\n      **kwargs: Keyword arguments to base class.\n    \"\"\"\n    super().__init__(**kwargs)\n    self._embedding_output_dim = embedding_output_dim\n    self._tokenizer = pretrained_efficientnet_encoder.EfficientNetEncoder(\n        pooling=False, early_film=True)\n    self._use_token_learner = use_token_learner\n    if self._use_token_learner:\n      self._num_tokens = num_tokens\n      self._token_learner = token_learner.TokenLearnerModule(\n          num_tokens=self._num_tokens)\n  @property\n  def tokens_per_context_image(self) -> int:\n    if self._use_token_learner:\n      num_tokens = self._num_tokens\n    else:\n      num_tokens = 81\n    return num_tokens\n  def __call__(self,",
+        "type": "code",
+        "location": "/tokenizers/image_tokenizer.py:28-60"
+    },
+    "213": {
+        "file_id": 19,
+        "content": "This code instantiates an RT1ImageTokenizer with optional arguments such as embedding_output_dim and use_token_learner. It initializes the tokenizer's EfficientNetEncoder, token learner if use_token_learner is True, and returns tokens_per_context_image based on the number of learned tokens or a default value of 81.",
+        "type": "comment"
+    },
+    "214": {
+        "file_id": 19,
+        "content": "               image: tf.Tensor,\n               context: Optional[tf.Tensor] = None,\n               training: bool = False) -> tf.Tensor:\n    \"\"\"Gets image tokens.\n    Args:\n      image: Images of shape (b, t, h, w, 3) to tokenize.\n      context: An optional context vector (e.g., a natural language embedding).\n        Expected to have shape (b, t, embedding_dim).\n      training: Whether or not we are in training mode.\n    Returns:\n      tokens: has shape (batch, t, num_tokens_per_timestep, embedding_dim)\n    \"\"\"\n    image_shape = tf.shape(image)\n    b = image_shape[0]\n    t = image_shape[1]\n    h = image_shape[2]\n    w = image_shape[3]\n    c = image_shape[4]\n    # Fold the time axis into the batch axis.\n    image = tf.reshape(image, [b * t, h, w, c])\n    if context is not None:\n      context_rank = tf.rank(context)\n      assertion = tf.Assert(context_rank == 3, data=[context_rank])\n      with tf.control_dependencies([assertion]):\n        context = tf.reshape(context, [b * t, tf.shape(context)[-1]])\n    tokens = self.get_image_embeddings(image, context, training)",
+        "type": "code",
+        "location": "/tokenizers/image_tokenizer.py:61-89"
+    },
+    "215": {
+        "file_id": 19,
+        "content": "This function takes in an image tensor and optionally a context tensor. It reshapes the image tensor, then if a context tensor is provided, it also reshapes it. The result is a token tensor based on the get_image_embeddings method, which is not shown here. The function returns tokens with shape (batch, t, num_tokens_per_timestep, embedding_dim).",
+        "type": "comment"
+    },
+    "216": {
+        "file_id": 19,
+        "content": "    if self._use_token_learner:\n      tokens = self._token_learner(tokens, training)\n    # Unflatten the time axis, which was previously flattened into the batch.\n    tokens = tf.reshape(tokens, [b, t, tf.shape(tokens)[1], -1])\n    return tokens\n  def get_image_embeddings(self,\n                           image: tf.Tensor,\n                           context: Optional[tf.Tensor],\n                           training: bool = False) -> tf.Tensor:\n    \"\"\"Gets embeddings from image.\n    Args:\n      image: Expected to be float32 in range [0, 1] with shape (b, h, w, 3).\n      context: Expected to be float32 with shape (b, embedding_dim)\n      training: Whether or not we are in training mode.\n    Returns:\n      tokens of shape (b, num_tokens, emedding_dim)\n    \"\"\"\n    image_tokens = self._tokenizer(image, context=context, training=training)\n    image_tokens = tf.reshape(image_tokens, [-1, 81, 512])\n    return image_tokens",
+        "type": "code",
+        "location": "/tokenizers/image_tokenizer.py:90-112"
+    },
+    "217": {
+        "file_id": 19,
+        "content": "The code defines a method to extract embeddings from images using a tokenizer and reshapes the resulting tokens into a 3D tensor. The `get_image_embeddings` function takes an image tensor, optional context tensor, and training flag as input, and returns the image tokens in the desired shape. The image is first transformed by the tokenizer, then reshaped to (-1, 81, 512) using tf.reshape.",
+        "type": "comment"
+    },
+    "218": {
+        "file_id": 20,
+        "content": "/tokenizers/image_tokenizer_test.py",
+        "type": "filepath"
+    },
+    "219": {
+        "file_id": 20,
+        "content": "The code tests the image_tokenizer module by creating a tokenizer object with provided parameters, generating random images and context vectors, and checking the shape of resulting image tokens to ensure it produces appropriate outputs for the given input data.",
+        "type": "summary"
+    },
+    "220": {
+        "file_id": 20,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for image_tokenizer.\"\"\"\nfrom absl.testing import parameterized\nfrom robotics_transformer.tokenizers import image_tokenizer\nimport tensorflow as tf\nclass ImageTokenizerTest(tf.test.TestCase, parameterized.TestCase):\n  @parameterized.named_parameters(\n      ('sample_image', 512, 224, False, 8),\n      ('sample_image_token_learner', 512, 224, True, 8))\n  def testTokenize(self, output_dim, image_resolution, use_token_learner,\n                   num_tokens):",
+        "type": "code",
+        "location": "/tokenizers/image_tokenizer_test.py:1-26"
+    },
+    "221": {
+        "file_id": 20,
+        "content": "The provided code is a test case for the image_tokenizer module in the robotics_transformer library. The test class, ImageTokenizerTest, is extending tf.test.TestCase and parameterized.TestCase to handle tensorflow testing features and parameterized tests. It contains one test function, testTokenize, which takes parameters such as output_dim, image_resolution, use_token_learner, and num_tokens. The purpose of this test is to verify the tokenization functionality of the image_tokenizer module.",
+        "type": "comment"
+    },
+    "222": {
+        "file_id": 20,
+        "content": "    batch = 1\n    seq = 2\n    tokenizer = image_tokenizer.RT1ImageTokenizer(\n        embedding_output_dim=output_dim,\n        use_token_learner=use_token_learner,\n        num_tokens=num_tokens)\n    image = tf.random.normal(\n        shape=(batch, seq, image_resolution, image_resolution, 3))\n    image = tf.clip_by_value(image, 0.0, 1.0)\n    context_vector = tf.random.uniform((batch, seq, 512))\n    image_tokens = tokenizer(image, context_vector)\n    if use_token_learner:\n      self.assertEqual(image_tokens.shape, [batch, seq, num_tokens, 512])\n    else:\n      self.assertEqual(image_tokens.shape, [batch, seq, 81, 512])\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/tokenizers/image_tokenizer_test.py:27-46"
+    },
+    "223": {
+        "file_id": 20,
+        "content": "This code is testing the image_tokenizer by creating a tokenizer object with given parameters, generating random images and context vectors, and then checking the shape of the resulting image tokens. It asserts that the shape matches the expected format based on whether token learning is used or not. The code ensures the tokenizer works correctly and produces appropriate outputs for the given input data.",
+        "type": "comment"
+    },
+    "224": {
+        "file_id": 21,
+        "content": "/tokenizers/token_learner.py",
+        "type": "filepath"
+    },
+    "225": {
+        "file_id": 21,
+        "content": "This code provides a TensorFlow implementation of the Token Learner for robotics_transformer project, with GELU activation and transformer MLP block. It initializes Transformer token learner layer using dense layers, defines TokenLearnerModule class, and performs token learning via MlpBlock and layer normalization before returning feature map with shape [bs, n_token, c].",
+        "type": "summary"
+    },
+    "226": {
+        "file_id": 21,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"TF implementation of Token Learner(Ryoo et al 2021).\"\"\"\nimport functools\nfrom typing import Optional, Sequence, Union\nimport numpy as np\nimport tensorflow as tf\ndef gelu(x: float) -> float:\n  return 0.5 * x * (1 +\n                    tf.tanh(tf.sqrt(2 / np.pi) * (x + 0.044715 * tf.pow(x, 3))))\ndef _maybe_dropout(rate: float = 0.0, name: str = \"dropout\"):\n  \"\"\"Helper function to return dropout layer if rate is non zero.\"\"\"\n  if rate:\n    return tf.keras.layers.Dropout(rate, name=name)",
+        "type": "code",
+        "location": "/tokenizers/token_learner.py:1-30"
+    },
+    "227": {
+        "file_id": 21,
+        "content": "This code snippet is a part of the \"robotics_transformer\" project and contains TensorFlow implementation of Token Learner as described in Ryoo et al 2021. It includes definitions for GELU activation function, and _maybe_dropout helper function that returns Dropout layer if rate is non-zero.",
+        "type": "comment"
+    },
+    "228": {
+        "file_id": 21,
+        "content": "  return lambda x, *args: x  # Does nothing to x.\nclass MlpBlock(tf.keras.layers.Layer):\n  \"\"\"Transformer MLP / feed-forward block.\"\"\"\n  def __init__(self,\n               *,\n               mlp_dim: int,\n               out_dim: Optional[int] = None,\n               kernel_init: Optional[tf.keras.initializers.Initializer] = tf\n               .keras.initializers.glorot_uniform(),\n               bias_init: Optional[tf.keras.initializers.Initializer] = tf.keras\n               .initializers.RandomNormal(stddev=1e-6),\n               dropout_rate: float = 0.1,\n               **kwargs):\n    \"\"\"Initializer for the MLP Block.\n    This computes outer_dense(gelu(hidden_dense(input))), with dropout\n    applied as necessary.\n    Note: Especially outside a keras workflow, make sure to call layer.build\n    Args:\n      mlp_dim: The dimension of the inner representation (output of hidden\n        layer). Usually larger than the input/output dim.\n      out_dim: The output dimension of the block. If None, the model output dim\n        is equal to the input dim (usually desired)",
+        "type": "code",
+        "location": "/tokenizers/token_learner.py:31-58"
+    },
+    "229": {
+        "file_id": 21,
+        "content": "The code defines a transformer MLP block (Feed-Forward Block) that takes in parameters like mlp_dim, out_dim, kernel_init, bias_init, dropout_rate. It computes outer_dense(gelu(hidden_dense(input))) with dropout applied as necessary. Note that outside a keras workflow, layer.build should be called.",
+        "type": "comment"
+    },
+    "230": {
+        "file_id": 21,
+        "content": "      kernel_init: Initializer for dense kernels, used for both dense layers.\n      bias_init: Initializer for dense biases, used for both dense layers.\n      dropout_rate: Dropout rate to be applied after dense ( & activation)\n      **kwargs: Other keyword args passed to the tf.keras.layers.Layer\n        constructor e.g. the name\n    \"\"\"\n    super().__init__(**kwargs)\n    self._out_dim = out_dim\n    self._hidden_dropout = _maybe_dropout(dropout_rate)\n    self._output_dropout = _maybe_dropout(dropout_rate)\n    self._hidden_layer = tf.keras.layers.Dense(\n        mlp_dim,\n        activation=gelu,\n        kernel_initializer=kernel_init,\n        bias_initializer=bias_init,\n        name=\"hidden_dense\")\n    # If out_dim is None, infer out_dim = input_dim at self.build()\n    self._output_layer = functools.partial(\n        tf.keras.layers.Dense,\n        kernel_initializer=kernel_init,\n        bias_initializer=bias_init,\n        name=\"final_dense\")\n  def build(self, input_shape: Sequence[int]):\n    out_dim = self._out_dim or input_shape[-1]",
+        "type": "code",
+        "location": "/tokenizers/token_learner.py:59-84"
+    },
+    "231": {
+        "file_id": 21,
+        "content": "This code initializes a Transformer token learner layer with optional arguments including the output dimension (out_dim), dropout rate, and other keyword arguments. It creates hidden and output layers using dense layers from tf.keras.layers. The hidden layer uses gelu activation function, while the output layer is initialized as a partial function of tf.keras.layers.Dense.",
+        "type": "comment"
+    },
+    "232": {
+        "file_id": 21,
+        "content": "    self._output_layer = self._output_layer(units=out_dim)\n    super().build(input_shape)\n  def call(self,\n           inputs: tf.Tensor,\n           *,\n           is_training: Union[bool, tf.Tensor] = False) -> tf.Tensor:\n    \"\"\"Applies Transformer MlpBlock module.\"\"\"\n    x = self._hidden_layer(inputs)\n    x = self._hidden_dropout(x, is_training)\n    x = self._output_layer(x)\n    x = self._output_dropout(x, is_training)\n    return x\nclass TokenLearnerModule(tf.keras.layers.Layer):\n  \"\"\"TokenLearner module V1.1 (https://arxiv.org/abs/2106.11297).\"\"\"\n  def __init__(self,\n               num_tokens: int,\n               bottleneck_dim: int = 64,\n               dropout_rate: float = 0.):\n    super().__init__()\n    self.mlp = MlpBlock(\n        mlp_dim=bottleneck_dim, out_dim=num_tokens, dropout_rate=dropout_rate)\n    self.layernorm = tf.keras.layers.LayerNormalization(epsilon=1e-6)\n  def call(self, inputs: tf.Tensor, training: bool = False) -> tf.Tensor:\n    if len(inputs.shape) == 4:\n      bs, h, w, c = inputs.shape\n      inputs = tf.reshape(inputs, [bs, h * w, c])",
+        "type": "code",
+        "location": "/tokenizers/token_learner.py:85-116"
+    },
+    "233": {
+        "file_id": 21,
+        "content": "The code defines a TokenLearnerModule class that applies a Transformer MlpBlock and includes layer normalization. It takes the number of tokens, bottleneck dimension, and dropout rate as parameters. The call function performs token learning by first applying the MlpBlock and then the layer normalization.",
+        "type": "comment"
+    },
+    "234": {
+        "file_id": 21,
+        "content": "    selected = self.layernorm(inputs)\n    selected = self.mlp(\n        selected, is_training=training)  # Shape: [bs, h*w, n_token].\n    selected = tf.transpose(selected, [0, 2, 1])  # Shape: [bs, n_token, h*w].\n    selected = tf.nn.softmax(selected, axis=-1)\n    feat = tf.einsum(\"...si,...id->...sd\", selected, inputs)\n    return feat  # Shape: [bs, n_token, c]",
+        "type": "code",
+        "location": "/tokenizers/token_learner.py:118-128"
+    },
+    "235": {
+        "file_id": 21,
+        "content": "This code snippet is part of a token learning model. It performs layer normalization, applies multi-layer perceptron (MLP) for feature extraction, transposes the dimensions, applies softmax activation, and then performs feature extraction using Einstein summation. Finally, it returns the feature map with shape [bs, n_token, c].",
+        "type": "comment"
+    },
+    "236": {
+        "file_id": 22,
+        "content": "/tokenizers/token_learner_test.py",
+        "type": "filepath"
+    },
+    "237": {
+        "file_id": 22,
+        "content": "This code tests the TokenLearnerModule in the tokenizers package of the robotics_transformer library using TensorFlow. It defines a class, TokenLearnerTest, which takes parameters for embedding dimension and number of tokens, creating a random input vector. The test ensures output tokens match expected format [batch * seq, num_tokens, embedding_dim].",
+        "type": "summary"
+    },
+    "238": {
+        "file_id": 22,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for token_learner.\"\"\"\nfrom absl.testing import parameterized\nfrom robotics_transformer.tokenizers import token_learner\nimport tensorflow as tf\nclass TokenLearnerTest(parameterized.TestCase):\n  @parameterized.named_parameters(('sample_input', 512, 8))\n  def testTokenLearner(self, embedding_dim, num_tokens):\n    batch = 1\n    seq = 2\n    token_learner_layer = token_learner.TokenLearnerModule(\n        num_tokens=num_tokens)\n    inputvec = tf.random.normal(shape=(batch * seq, 81, embedding_dim))",
+        "type": "code",
+        "location": "/tokenizers/token_learner_test.py:1-29"
+    },
+    "239": {
+        "file_id": 22,
+        "content": "This code is for testing the TokenLearnerModule in the tokenizers package of the robotics_transformer library. It uses TensorFlow and defines a class, TokenLearnerTest, which tests the module with different input sizes and dimensions. The test takes parameters for embedding dimension and number of tokens, and creates a random input vector of shape (batch * seq, 81, embedding_dim).",
+        "type": "comment"
+    },
+    "240": {
+        "file_id": 22,
+        "content": "    learnedtokens = token_learner_layer(inputvec)\n    self.assertEqual(learnedtokens.shape,\n                     [batch * seq, num_tokens, embedding_dim])\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/tokenizers/token_learner_test.py:31-37"
+    },
+    "241": {
+        "file_id": 22,
+        "content": "Code tests the shape of output tokens from token learner layer, ensuring it matches expected format [batch * seq, num_tokens, embedding_dim].",
+        "type": "comment"
+    },
+    "242": {
+        "file_id": 23,
+        "content": "/transformer.py",
+        "type": "filepath"
+    },
+    "243": {
+        "file_id": 23,
+        "content": "The code defines a Transformer layer with configurable parameters and a Multi-Head Attention layer for processing input tensors. The transformer model applies attention and embeddings, taking an input tensor x and outputs attention scores.",
+        "type": "summary"
+    },
+    "244": {
+        "file_id": 23,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"RT1 decoder transformer.\nCopied from:\nhttps://www.tensorflow.org/text/tutorials/transformer#decoder\n\"\"\"\nfrom typing import Tuple, Union\nimport tensorflow as tf\nclass _TransformerLayer(tf.keras.layers.Layer):\n  \"\"\"A single transformer block.\"\"\"\n  def __init__(self,\n               layer_size: int = 4096,\n               num_heads: int = 8,\n               feed_forward_size: int = 512,\n               dropout_rate: float = 0.1,\n               return_attention_scores: bool = False):",
+        "type": "code",
+        "location": "/transformer.py:1-32"
+    },
+    "245": {
+        "file_id": 23,
+        "content": "This code defines a Transformer layer, which is a single transformer block. It has configurable parameters such as layer size, number of heads, feed-forward size, dropout rate, and returns attention scores optionally.",
+        "type": "comment"
+    },
+    "246": {
+        "file_id": 23,
+        "content": "    \"\"\"Creates a Transformer layer.\n    Args:\n      layer_size: Size of the multiple head attention layer.\n      num_heads: Number of heads for the multiple head attention layer.\n      feed_forward_size: Dimensionality of the feed_forward layer.\n      dropout_rate: Dropout rate.\n      return_attention_scores: Return attention scores.\n    \"\"\"\n    super(_TransformerLayer, self).__init__()\n    self.layernorm1 = tf.keras.layers.LayerNormalization(epsilon=1e-6)\n    self.mha1 = tf.keras.layers.MultiHeadAttention(\n        key_dim=layer_size, num_heads=num_heads, dropout=dropout_rate)\n    self.ff = tf.keras.layers.Dense(feed_forward_size)\n    self.layernorm2 = tf.keras.layers.LayerNormalization(epsilon=1e-6)\n    self.dropout_ff = tf.keras.layers.Dropout(dropout_rate)\n    self._return_attention_scores = return_attention_scores\n  def call(self, x: tf.Tensor, attention_mask: tf.Tensor,\n           training: bool) -> Tuple[tf.Tensor, Union[tf.Tensor, None]]:\n    \"\"\"Calls the layer.\n    Args:\n      x: Input Tensor of shape `(B, T, dim)`.",
+        "type": "code",
+        "location": "/transformer.py:33-57"
+    },
+    "247": {
+        "file_id": 23,
+        "content": "The code defines a Transformer layer with multiple head attention, feed-forward layer, and layer normalization. It takes arguments such as layer size, number of heads, feed-forward size, dropout rate, and whether to return attention scores. The call function is responsible for processing the input tensor, applying multi-head attention, feed-forward layers, and layer normalization.",
+        "type": "comment"
+    },
+    "248": {
+        "file_id": 23,
+        "content": "      attention_mask: a boolean mask of shape `(B, T, T)`, that prevents\n        attention to certain positions. The boolean mask specifies which query\n        elements can attend to which key elements, 1 indicates attention and 0\n        indicates no attention. Broadcasting can happen for the missing batch\n        dimensions and the head dimension.\n      training: Python boolean indicating whether the layer should behave in\n        training mode (adding dropout) or in inference mode (no dropout).\n    Returns:\n      y: Output Tensor of shape `(B, T, dim)`. Also return the attention scores\n      of shape `(B, T, dim)` or None.\n    \"\"\"\n    x1 = self.layernorm1(x)\n    mha_results = self.mha1(\n        query=x1,\n        key=x1,\n        value=x1,\n        attention_mask=attention_mask,\n        return_attention_scores=self._return_attention_scores,\n        training=training)\n    if self._return_attention_scores:\n      x1, score = mha_results\n    else:\n      x1, score = mha_results, None\n    x = x + x1\n    y = self.layernorm2(x)",
+        "type": "code",
+        "location": "/transformer.py:58-85"
+    },
+    "249": {
+        "file_id": 23,
+        "content": "The code defines a Multi-Head Attention layer for the transformer. It takes input `x`, applies layer normalization, passes it to the MHA block, adds it back to the original input, and then applies another layer normalization before returning the output as `y`. The attention scores are optional based on the `_return_attention_scores` flag.",
+        "type": "comment"
+    },
+    "250": {
+        "file_id": 23,
+        "content": "    ff_y = self.ff(y)\n    ff_y = self.dropout_ff(ff_y, training=training)\n    x = x + ff_y\n    return x, score\nclass Transformer(tf.keras.layers.Layer):\n  \"\"\"A decoder only transformer.\"\"\"\n  def __init__(self,\n               num_layers: int = 1,\n               layer_size: int = 4096,\n               num_heads: int = 8,\n               feed_forward_size: int = 512,\n               dropout_rate: float = 0.1,\n               vocab_size: int = 256,\n               return_attention_scores: bool = False):\n    \"\"\"Creates a transformer.\n    Args:\n      num_layers: Number of transformer layers.\n      layer_size: Size of the multiple head attention layer.\n      num_heads: Number of heads for the multiple head attention layer.\n      feed_forward_size: Dimensionality of the feed_forward layer.\n      dropout_rate: Dropout rate.\n      vocab_size: Dimensionality of tokens from the output layer.\n      return_attention_scores: Return attention scores.\n    \"\"\"\n    super(Transformer, self).__init__()\n    self._layers = [\n        _TransformerLayer(  # pylint: disable=g-complex-comprehension",
+        "type": "code",
+        "location": "/transformer.py:86-117"
+    },
+    "251": {
+        "file_id": 23,
+        "content": "This code snippet defines a decoder only transformer, which is a type of neural network layer. The Transformer class takes in several parameters such as number of layers, size of the multiple head attention layer, number of heads, dimensionality of feed_forward layer, dropout rate, and dimensionality of tokens from output layer. It also has an optional argument to return attention scores or not. The class initializes a list of TransformerLayer objects using a list comprehension to create each layer with the specified parameters.",
+        "type": "comment"
+    },
+    "252": {
+        "file_id": 23,
+        "content": "            layer_size=layer_size,\n            num_heads=num_heads,\n            feed_forward_size=feed_forward_size,\n            dropout_rate=dropout_rate,\n            return_attention_scores=return_attention_scores)\n        for _ in range(num_layers)\n    ]\n    self._token_emb = tf.keras.layers.Dense(feed_forward_size)\n    self._position_emb = tf.keras.layers.Dense(feed_forward_size)\n    self._output_tokens = tf.keras.layers.Dense(vocab_size)\n  def call(\n      self,\n      x: tf.Tensor,\n      training: bool,\n      attention_mask: tf.Tensor,\n  ) -> Union[tf.Tensor, Tuple[tf.Tensor, list[tf.Tensor]]]:\n    \"\"\"Calls the layer.\n    Args:\n      x: Input Tensor of shape `(B, T, dim)`.\n      training: Python boolean indicating whether the layer should behave in\n        training mode (adding dropout) or in inference mode (no dropout).\n      attention_mask: a boolean mask of shape `(B, T, T)`, that prevents\n        attention to certain positions. The boolean mask specifies which query\n        elements can attend to which key elements, 1 indicates attention and 0",
+        "type": "code",
+        "location": "/transformer.py:118-143"
+    },
+    "253": {
+        "file_id": 23,
+        "content": "This code initializes a transformer model with specified parameters and defines its call function. The model consists of multiple layers, each with a specific layer size, number of heads, feed-forward size, dropout rate, and attention score return option. The model also includes dense layers for token and position embeddings, as well as an output dense layer. The call function takes input tensors, training state, and an attention mask, and returns either a tensor or a tuple of tensors (including attention scores) based on the model's behavior during training or inference.",
+        "type": "comment"
+    },
+    "254": {
+        "file_id": 23,
+        "content": "        indicates no attention. Broadcasting can happen for the missing batch\n        dimensions and the head dimension.\n    Returns:\n      x: Output Tensor of shape `(B, T, vocab_size)`. If\n      `return_attention_scores`, also return attention scores of\n      a list of `layer` of elements with shape `(B, T, dim)`.\n    \"\"\"\n    seq_len = tf.shape(x)[1]\n    batch_size = tf.shape(x)[0]\n    positions = tf.one_hot(\n        tf.tile(tf.expand_dims(tf.range(0, seq_len, 1), 0), [batch_size, 1]),\n        seq_len)\n    x = self._token_emb(x)\n    x += self._position_emb(positions)\n    scores = []\n    for layer in self._layers:\n      x, score = layer(x, attention_mask=attention_mask, training=training)\n      if score is not None:\n        scores.append(score)\n    x = self._output_tokens(x)\n    return x, scores",
+        "type": "code",
+        "location": "/transformer.py:144-169"
+    },
+    "255": {
+        "file_id": 23,
+        "content": "This code implements a transformer model, performing attention mechanisms and token embeddings. It takes an input tensor x of shape `(B, T, vocab_size)` where B is batch size, T is sequence length, and vocab_size is the number of tokens in the vocabulary. The model applies position and token embeddings, then passes through layers of the transformer model, which outputs attention scores. The output tensor x has shape `(B, T, vocab_size)` and scores are returned as a list for each layer in the model.",
+        "type": "comment"
+    },
+    "256": {
+        "file_id": 24,
+        "content": "/transformer_network.py",
+        "type": "filepath"
+    },
+    "257": {
+        "file_id": 24,
+        "content": "This code introduces a transformer network for robotics tasks, incorporates training/inference functions, and computes action loss using transformer models. It logs network parameters, tracks input shapes, and visualizes spatial attention through TensorBoard. The code tokenizes images, handles data types, cropping if needed, with three main functions and helper functions.",
+        "type": "summary"
+    },
+    "258": {
+        "file_id": 24,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tensorflow based methods for sequence agents.\"\"\"\nfrom typing import Optional, Tuple, Union, Any\nfrom absl import logging\nimport numpy as np\nfrom robotics_transformer import transformer\nfrom robotics_transformer.film_efficientnet import preprocessors\nfrom robotics_transformer.tokenizers import action_tokenizer\nfrom robotics_transformer.tokenizers import image_tokenizer\nfrom tensor2robot.utils import tensorspec_utils\nimport tensorflow as tf\nfrom tf_agents.networks import network",
+        "type": "code",
+        "location": "/transformer_network.py:1-27"
+    },
+    "259": {
+        "file_id": 24,
+        "content": "The code is a Python file containing TensorFlow-based methods for sequence agents. It imports necessary libraries and modules, such as transformer, preprocessors, action_tokenizer, image_tokenizer, tensorspec_utils, and tf_agents.networks. This file likely includes functions related to creating and training sequence models using TensorFlow.",
+        "type": "comment"
+    },
+    "260": {
+        "file_id": 24,
+        "content": "from tf_agents.specs import tensor_spec\nfrom tf_agents.utils import nest_utils\nclass TransformerNetwork(network.Network):\n  \"\"\"A transformer based actor network.\"\"\"\n  def __init__(\n      self,\n      input_tensor_spec: tensorspec_utils.TensorSpecStruct,\n      output_tensor_spec: tensorspec_utils.TensorSpecStruct,\n      train_step_counter: int = 0,\n      vocab_size: int = 256,\n      token_embedding_size: int = 512,\n      num_layers: int = 1,\n      layer_size: int = 4096,\n      num_heads: int = 8,\n      feed_forward_size: int = 512,\n      dropout_rate: float = 0.1,\n      time_sequence_length: int = 1,\n      crop_size: int = 236,\n      policy_info_spec: Optional[dict[Any,\n                                      tensor_spec.BoundedTensorSpec]] = None,\n      action_order: Optional[list[str]] = None,\n      use_token_learner: Optional[bool] = True,\n      return_attention_scores: bool = False,\n      **kwargs):\n    \"\"\"Creates a transformer network.\n    Args:\n      input_tensor_spec: Nested list/tuple/dict of TensorSpecs, describing the",
+        "type": "code",
+        "location": "/transformer_network.py:28-58"
+    },
+    "261": {
+        "file_id": 24,
+        "content": "This code is defining a class for a transformer-based actor network. It takes input tensor spec, output tensor spec, and other parameters such as vocab_size, token_embedding_size, num_layers, layer_size, num_heads, feed_forward_size, dropout_rate, time_sequence_length, crop_size, policy_info_spec, action_order, use_token_learner, return_attention_scores. This class extends the network.Network class from tf_agents.network module.",
+        "type": "comment"
+    },
+    "262": {
+        "file_id": 24,
+        "content": "        shape of input tensor.\n      output_tensor_spec: Nested list/tuple/dict of TensorSpecs, describing the\n        shape of output tensor.\n      train_step_counter: Counter for number of steps.\n      vocab_size: Dimensionality of tokens from the output layer.\n      token_embedding_size: Dimensionality of tokens from the embedding layer.\n      num_layers: Number of transformer layers.\n      layer_size: Size of the multiple head attention layer.\n      num_heads: Number of heads for the multiple head attention layer.\n      feed_forward_size: Dimensionality of the feed_forward layer.\n      dropout_rate: Dropout rate.\n      time_sequence_length: Length of the time sequence.\n      crop_size: Height and width of the square crop, where original image will\n        be padded to allow full field of view to be extracted.\n      policy_info_spec: Spec on return value given return type of the return\n        tokenizer.\n      action_order: Order of actions for the action tokenizer.\n      use_token_learner: Whether to use token learner. See",
+        "type": "code",
+        "location": "/transformer_network.py:59-76"
+    },
+    "263": {
+        "file_id": 24,
+        "content": "This code defines a Transformer Network with specific input and output tensor shapes, train_step_counter for step counting, vocab_size for token dimensionality, embedding size, number of layers, layer sizes, heads, feed forward size, dropout rate, time sequence length, crop size, policy info specs, action order for the action tokenizer, and a flag to use a token learner.",
+        "type": "comment"
+    },
+    "264": {
+        "file_id": 24,
+        "content": "        https://arxiv.org/abs/2106.11297\n      return_attention_scores: show attention scores in tensorboard.\n      **kwargs: Keyword parameter arguments.\n    \"\"\"\n    self._input_tensor_spec = input_tensor_spec\n    self._output_tensor_spec = output_tensor_spec\n    self._train_step_counter = train_step_counter\n    self._actions = None\n    self._returns = None\n    self._vocab_size = vocab_size\n    self._token_embedding_size = token_embedding_size\n    self._time_sequence_length = time_sequence_length\n    self._crop_size = crop_size\n    self._transformer = transformer.Transformer(\n        num_layers=num_layers,\n        layer_size=layer_size,\n        num_heads=num_heads,\n        feed_forward_size=feed_forward_size,\n        dropout_rate=dropout_rate,\n        vocab_size=self._vocab_size,\n        return_attention_scores=return_attention_scores)\n    # create tokenizers\n    self._image_tokenizer = image_tokenizer.RT1ImageTokenizer(\n        embedding_output_dim=self._token_embedding_size,\n        use_token_learner=use_token_learner)",
+        "type": "code",
+        "location": "/transformer_network.py:77-103"
+    },
+    "265": {
+        "file_id": 24,
+        "content": "This code is initializing a Transformer network. It takes in various arguments like num_layers, layer_size, num_heads, feed_forward_size, dropout_rate, vocab_size, and return_attention_scores. It also sets up the image_tokenizer using the token_embedding_size and use_token_learner parameters. This network can be used for various tasks like language modeling or machine translation.",
+        "type": "comment"
+    },
+    "266": {
+        "file_id": 24,
+        "content": "    self._action_tokenizer = action_tokenizer.RT1ActionTokenizer(\n        output_tensor_spec,\n        vocab_size=self._vocab_size,\n        action_order=action_order)\n    self._tokens_per_action = self._action_tokenizer.tokens_per_action\n    self._tokens_per_context_image = self._image_tokenizer.tokens_per_context_image\n    # generate loss and attention masks\n    self._generate_masks()\n    # define mappings to token embedding size\n    self._action_token_emb = tf.keras.layers.Dense(self._token_embedding_size)\n    # define loss function\n    self._loss_object = tf.keras.losses.SparseCategoricalCrossentropy(\n        from_logits=True, reduction=tf.keras.losses.Reduction.NONE)\n    self._attention_scores = []\n    self._use_token_learner = use_token_learner\n    super(TransformerNetwork, self).__init__(\n        input_tensor_spec=input_tensor_spec, **kwargs)\n    self._state_spec = {\n        # Force this to be 4 dimension due to b/254902773.\n        # Otherwise can be dimension 3.\n        'context_image_tokens':\n            tensor_spec.TensorSpec(",
+        "type": "code",
+        "location": "/transformer_network.py:104-129"
+    },
+    "267": {
+        "file_id": 24,
+        "content": "This code is initializing a TransformerNetwork object, setting various attributes including the action and image tokenizers, generating masks, defining loss functions, and specifying input tensor specifications.",
+        "type": "comment"
+    },
+    "268": {
+        "file_id": 24,
+        "content": "                shape=(time_sequence_length, self._tokens_per_context_image, 1,\n                       token_embedding_size),\n                dtype=tf.float32,\n                name='context_image_tokens'),\n        'action_tokens':\n            tensor_spec.TensorSpec(\n                shape=(time_sequence_length, self._tokens_per_action, 1, 1),\n                dtype=tf.int32,\n                name='action_tokens'),\n        # Stores where in the window we are.\n        # This value is within range [0, time_sequence_length + 1].\n        # When seq_idx == time_sequence_length, context_image_tokens and\n        # action_tokens need to be shifted to the left.\n        'seq_idx':\n            tensor_spec.TensorSpec(\n                shape=(1, 1, 1, 1), dtype=tf.int32, name='seq_idx')\n    }\n  @property\n  def attention_scores(self) -> list[tf.Tensor]:\n    \"\"\"Return attention score. This is for debugging/visualization purpose.\"\"\"\n    return self._attention_scores\n  def _get_action_index_for_token(self, k):\n    \"\"\"Returns action associated with the token at given position `k`.",
+        "type": "code",
+        "location": "/transformer_network.py:130-154"
+    },
+    "269": {
+        "file_id": 24,
+        "content": "This code defines a Transformer network for robotics tasks, with inputs like context image tokens, action tokens, and sequence index. It also includes a property for attention scores to aid in debugging and visualization. The context image tokens have a shape of (time_sequence_length, tokens_per_context_image, 1, token_embedding_size) and are of type tf.float32. The action tokens have a shape of (time_sequence_length, tokens_per_action, 1, 1) and are of type tf.int32. The sequence index is used to keep track of the current position within the time sequence and has a shape of (1, 1, 1, 1) and dtype tf.int32.",
+        "type": "comment"
+    },
+    "270": {
+        "file_id": 24,
+        "content": "    If k is not an action token then it returns -1.\n    If k is part of the first action in the sequence then returns 0 etc.\n    Args:\n        k: an int that represents the position in the sequence.\n    Returns:\n        The index of the action that this position belongs to, or if this\n        position is part of an image token then returns -1.\n    \"\"\"\n    if (k < 0 or k >= self._all_num_tokens):\n      return -1\n    n = k\n    if n % self._single_time_step_num_tokens < self._tokens_per_context_image:\n      return -1\n    return int(n / self._single_time_step_num_tokens)\n  def _generate_masks(self):\n    \"\"\"Generate mask for action prediction loss and attention visualization.\"\"\"\n    # each time step = [image, action]\n    self._single_time_step_num_tokens = (\n        self._tokens_per_action + self._tokens_per_context_image)\n    # full sequence = [prefix context + N x timestep + postfix context]\n    self._all_num_tokens = (\n        self._time_sequence_length * self._single_time_step_num_tokens)\n    # create mask for action predition loss",
+        "type": "code",
+        "location": "/transformer_network.py:156-184"
+    },
+    "271": {
+        "file_id": 24,
+        "content": "This code defines two methods for a class, one to determine the action index given a position in the sequence and another to generate masks for action prediction loss and attention visualization. The first method returns -1 if k is not within the valid range or is part of an image token; otherwise, it returns the index of the action that the position belongs to. The second method calculates the total number of tokens in a full sequence by multiplying the time step length with the single time step number of tokens (which includes both action and context image tokens).",
+        "type": "comment"
+    },
+    "272": {
+        "file_id": 24,
+        "content": "    self._action_tokens_mask = []\n    for n in range(0, self._all_num_tokens, self._single_time_step_num_tokens):\n      for x in range(0, self._tokens_per_action, 1):\n        self._action_tokens_mask.append(x + n + self._tokens_per_context_image)\n    self._action_tokens_mask = tf.constant(\n        self._action_tokens_mask, dtype=tf.int32)\n    # The look ahead mask ensures causality.\n    self._default_attention_mask = tf.linalg.band_part(\n        tf.ones((self._all_num_tokens, self._all_num_tokens)), -1, 0)\n    action_mask = np.ndarray(\n        shape=(self._all_num_tokens, self._all_num_tokens), dtype=int)\n    for i in range(self._all_num_tokens):\n      for j in range(self._all_num_tokens):\n        action_i = self._get_action_index_for_token(i)\n        action_j = self._get_action_index_for_token(j)\n        mask = 0\n        if action_i != -1 and action_j != -1:\n          # Ignore actions of previous steps.\n          if action_j < action_i:\n            mask = 1\n          # If we're not auto-regression, ignore action dimensions of current",
+        "type": "code",
+        "location": "/transformer_network.py:185-207"
+    },
+    "273": {
+        "file_id": 24,
+        "content": "The code defines a transformer network for robotics, initializing action tokens mask and default attention mask. The action tokens mask is created based on the number of tokens per action and tokens per context image, and is converted to a tf.constant. The look ahead mask ensures causality by using tf.linalg.band_part to set the upper triangle to zeros. The code also defines an action_mask which ignores actions of previous steps, only allowing current and future actions.",
+        "type": "comment"
+    },
+    "274": {
+        "file_id": 24,
+        "content": "          # step.\n          if (action_j == action_i and j <= i):\n            mask = 1\n        action_mask[i, j] = mask\n    self._default_attention_mask -= action_mask\n  def _transformer_call(\n      self,\n      context_image_tokens: tf.Tensor,\n      action_tokens: tf.Tensor,\n      batch_size: int,\n      training: bool,\n      attention_mask: tf.Tensor,\n  ) -> Union[tf.Tensor, Tuple[tf.Tensor, tf.Tensor]]:\n    \"\"\"Calls the transformer.\n    Args:\n      context_image_tokens: Tokenized context and image in Tensor of shape `(B,\n        T, num token, -1)`.\n      action_tokens: Discrete action token sequence of size [8, 256].\n      batch_size: Batch size as when reshaping all tokens.\n      training: Whether to run the transformer in training mode.\n      attention_mask: Optional bool tensor for masking transformer's attention.\n    Returns:\n      Output tokens in Tensor of shape `(B, T, dim)`. If\n      return_attention_scores, also return the attention scores of\n      shape `(B, T, dim)`.\n    \"\"\"\n    input_token_sequence = self._assemble_input_token_sequence(",
+        "type": "code",
+        "location": "/transformer_network.py:208-237"
+    },
+    "275": {
+        "file_id": 24,
+        "content": "The code snippet defines a function that calls the transformer. It takes context and action tokens as input, along with batch size, training mode, and an optional attention mask. It returns output tokens and optionally the attention scores. The attention mask is used to mask the transformer's attention for certain positions based on action sequences.",
+        "type": "comment"
+    },
+    "276": {
+        "file_id": 24,
+        "content": "        context_image_tokens, action_tokens, batch_size)\n    # run transformer\n    output_tokens, self._attention_scores = self._transformer(\n        input_token_sequence, training, attention_mask)\n    return output_tokens\n  def _get_tokens_and_mask(self,\n                           observations: dict[str, tf.Tensor],\n                           network_state: dict[str, tf.Tensor],\n                           training: bool = False):\n    # tokenize all inputs\n    context_image_tokens, network_state = self._tokenize_images(\n        observations, network_state, training)\n    action_tokens = self._tokenize_actions(observations, network_state)\n    # generate transformer attention mask\n    attention_mask = self._default_attention_mask\n    return (context_image_tokens, action_tokens, attention_mask)\n  def _transformer_call_and_slice(self,\n                                  *args,\n                                  slice_start: int = 0,\n                                  slice_length: int = 1,\n                                  **kwargs) -> Tuple[tf.Tensor, tf.Tensor]:",
+        "type": "code",
+        "location": "/transformer_network.py:238-263"
+    },
+    "277": {
+        "file_id": 24,
+        "content": "This code defines a transformer network that takes in image tokens, action tokens, and attention mask as input. The network then performs the transformer operation to generate output tokens. The `_get_tokens_and_mask` function tokenizes all inputs and generates the attention mask, while the `_transformer_call_and_slice` function handles calling the transformer with optional slicing of the results.",
+        "type": "comment"
+    },
+    "278": {
+        "file_id": 24,
+        "content": "    output_tokens = self._transformer_call(*args, **kwargs)\n    slice_end = slice_start + slice_length\n    token_logits = output_tokens[:, slice_start:slice_end, :]\n    token = tf.argmax(token_logits, axis=-1, output_type=tf.int32)\n    return token, token_logits\n  def call(self,\n           observations: dict[str, tf.Tensor],\n           network_state: dict[str, tf.Tensor],\n           training: bool = False):\n    \"\"\"Calls the transformer network.\n    Args:\n      observations: Observation data including image and natural language\n        embedding in dict of Tensors.\n      network_state: Network state data including time step, image, action\n        tokens, step number in dict of Tensors.\n      training: Whether to call transformer network in training mode.\n    Returns:\n      A tuple `(Detokenized output actions, network state)`.\n    \"\"\"\n    # used to determine training vs inference call\n    # outer_rank will be 2 -> [b, t] during training and\n    # outer_rank will be 1 -> [b] during inference\n    outer_rank = self._get_outer_rank(observations)",
+        "type": "code",
+        "location": "/transformer_network.py:264-291"
+    },
+    "279": {
+        "file_id": 24,
+        "content": "This code defines a transformer network for processing observations (image and natural language) to output detokenized actions. The `_transformer_call` function is called with provided arguments, and the resultant token logits are obtained using slicing. The `call` method takes observation data, network state, and training flag as inputs. It determines the outer rank to call the transformer network in either training or inference mode. The outputs are detokenized output actions and network state.",
+        "type": "comment"
+    },
+    "280": {
+        "file_id": 24,
+        "content": "    assert outer_rank in (1, 2)\n    b, t = self._get_batch_size_and_seq_len(network_state)\n    context_image_tokens, action_tokens, attention_mask = self._get_tokens_and_mask(\n        observations, network_state, training)\n    self._aux_info = {'action_labels': action_tokens}\n    if outer_rank == 1:  # This is an inference call\n      # run transformer in loop to produce action tokens one-by-one\n      seq_idx = tf.reshape(network_state['seq_idx'], [1])[0]\n      action_t = tf.minimum(seq_idx, self._time_sequence_length - 1)\n      # Transformer shifts all to the left by one step by default (it's usually\n      # predicting the next token as default training task...).\n      transformer_shift = -1\n      # We only want to get the action predicted at time_step.\n      start_index = (\n          transformer_shift + self._tokens_per_context_image + action_t *\n          (self._single_time_step_num_tokens))\n      current_action_tokens = []\n      action_predictions_logits = []\n      for k in range(self._tokens_per_action):",
+        "type": "code",
+        "location": "/transformer_network.py:292-314"
+    },
+    "281": {
+        "file_id": 24,
+        "content": "Inference process begins when outer_rank equals 1, and the code initializes variables to iterate through a loop and predict action tokens one by one. The transformer network is shifted by default, predicting next token in training tasks. It gets action predicted at time_step, starting from a specific index.",
+        "type": "comment"
+    },
+    "282": {
+        "file_id": 24,
+        "content": "        action_index = start_index + k\n        token, token_logits = self._transformer_call_and_slice(\n            context_image_tokens,\n            action_tokens,\n            attention_mask=attention_mask,\n            batch_size=b,\n            training=training,\n            slice_start=action_index  # slicing single action dimension\n        )\n        action_predictions_logits.append(token_logits)\n        current_action_tokens.append(token)\n        # action_tokens is [b, t * self._tokens_per_action]\n        action_tokens = tf.reshape(action_tokens, [b, -1])\n        action_start_index = (action_t * self._tokens_per_action) + k\n        action_tokens = tf.concat([\n            action_tokens[:, :action_start_index], token,\n            action_tokens[:, action_start_index + 1:]\n        ],\n                                  axis=1)\n        # action_tokens is [b, t, self._tokens_per_action]\n        action_tokens = tf.reshape(action_tokens,\n                                   [b, t, self._tokens_per_action])\n      self._aux_info.update({",
+        "type": "code",
+        "location": "/transformer_network.py:315-337"
+    },
+    "283": {
+        "file_id": 24,
+        "content": "The code is slicing and concatenating action tokens to represent the entire sequence of actions. It appends the logits and tokens for each action, reshapes the action tokens, and updates the auxiliary information dictionary.",
+        "type": "comment"
+    },
+    "284": {
+        "file_id": 24,
+        "content": "          # action_predictions_logits is\n          # [b, self._tokens_per_action, self._vocab_size]\n          'action_predictions_logits': tf.concat(action_predictions_logits, 1)\n      })\n      # predicted_tokens_for_output is [b, self._tokens_per_action]\n      predicted_tokens_for_output = tf.concat(current_action_tokens, 1)\n      # state_action_tokens is [b, 1, self._tokens_per_action, 1, 1]\n      one_state_action_tokens = predicted_tokens_for_output[:, tf.newaxis, :,\n                                                            tf.newaxis,\n                                                            tf.newaxis]\n      state_action_tokens = network_state['action_tokens']\n      network_state['action_tokens'] = tf.concat([\n          state_action_tokens[:, :action_t, ...], one_state_action_tokens,\n          state_action_tokens[:, action_t + 1:, ...]\n      ],\n                                                 axis=1)\n      # Increment the time_step for the next inference call.\n      network_state['seq_idx'] = tf.reshape(",
+        "type": "code",
+        "location": "/transformer_network.py:338-356"
+    },
+    "285": {
+        "file_id": 24,
+        "content": "This code is part of a transformer network for robotics. It concatenates action predictions logits, predicted tokens for output, and state_action_tokens to form the next network_state. The time_step is incremented for the next inference call.",
+        "type": "comment"
+    },
+    "286": {
+        "file_id": 24,
+        "content": "          tf.minimum(seq_idx + 1, self._time_sequence_length), [-1, 1, 1, 1, 1])\n      self._loss = tf.constant(0.0)\n    else:\n      # training call --> simply run one transformer forward pass\n      output_tokens = self._transformer_call(\n          context_image_tokens,\n          action_tokens,\n          attention_mask=attention_mask,\n          batch_size=b,\n          training=training)\n      # Gather all predicted actions for the action loss.\n      action_logits = tf.gather(\n          output_tokens, self._action_tokens_mask - 1, axis=1)\n      action_logits_for_training = tf.reshape(\n          action_logits, [b, t, self._tokens_per_action, -1])\n      # Only take the last action as the action.\n      # action_logits_for_output is [b, self._tokens_per_action, emb]\n      action_logits_for_output = action_logits_for_training[:, -1]\n      # predicted_tokens_for_output is [b, self._tokens_per_action]\n      predicted_tokens_for_output = tf.argmax(\n          action_logits_for_output, axis=-1, output_type=tf.int32)\n      num_items = (",
+        "type": "code",
+        "location": "/transformer_network.py:357-383"
+    },
+    "287": {
+        "file_id": 24,
+        "content": "In this code segment, a transformer forward pass is performed for training, and the predicted actions are gathered. The action logits are reshaped, with only the last action taken as the final output. Predicted tokens for output are extracted from the action logits using argmax function, resulting in predicted_tokens_for_output (b, self._tokens_per_action).",
+        "type": "comment"
+    },
+    "288": {
+        "file_id": 24,
+        "content": "          tf.cast(b * t, tf.float32) * self._single_time_step_num_tokens)\n      action_loss = tf.reduce_mean(\n          self._loss_object(action_tokens, action_logits_for_training) /\n          num_items,\n          axis=-1)\n      self._loss = action_loss\n      # store action labels and predictions for visualization\n      self._aux_info.update({\n          'action_predictions':\n              tf.argmax(\n                  action_logits_for_training, axis=-1, output_type=tf.int32),\n          'action_loss':\n              action_loss,\n          'actor_loss_mask':\n              tf.ones([b], dtype=tf.float32)\n      })\n    output_actions = self._action_tokenizer.detokenize(\n        predicted_tokens_for_output)\n    return output_actions, network_state\n  def add_summaries(self, observations: dict[str, tf.Tensor],\n                    logging_info: dict[str, tf.Tensor], debug_summaries: bool,\n                    training: bool) -> None:\n    \"\"\"Adds summaries.\n    Args:\n      observations: Observation data including image and natural language",
+        "type": "code",
+        "location": "/transformer_network.py:384-413"
+    },
+    "289": {
+        "file_id": 24,
+        "content": "This code appears to be part of a transformer network model for robotics. It calculates the action loss and stores predictions and auxiliary information for visualization purposes. The `add_summaries` function adds summaries to observation data including image and natural language input. This code likely forms part of a larger training or prediction pipeline for a robotics system using transformer models.",
+        "type": "comment"
+    },
+    "290": {
+        "file_id": 24,
+        "content": "        instruction in dict of Tensors.\n      logging_info: Dict with all data stored for logging during training pass.\n      debug_summaries: Whether to include debug summaries.\n      training: Whether this function is called during training or inference.\n    \"\"\"\n    num_params = 0\n    for weight in self.trainable_weights:\n      weight_params = 1\n      for dim in weight.shape:\n        weight_params *= dim\n      num_params += weight_params\n    tf.compat.v2.summary.scalar(name='num_params', data=num_params)\n    # debug_summaries are for the non-tpu worker, train_summary.\n    if debug_summaries:\n      image = observations['image']  # [b, t, h, w, c]\n      image_h = image.shape[2]\n      image_w = image.shape[3]\n      batch_size = image.shape[0]\n      num_ts = image.shape[1]\n      logging.info('image shape %s', image.shape)\n      # Concat images for different timesteps across width.\n      image = tf.concat(tf.unstack(image, axis=1), 2)\n      # Concat images for different batches (up to 8) across height.\n      image = tf.expand_dims(tf.concat(tf.unstack(image, axis=0)[0:8], 0), 0)",
+        "type": "code",
+        "location": "/transformer_network.py:414-437"
+    },
+    "291": {
+        "file_id": 24,
+        "content": "This code calculates the number of trainable parameters in the transformer network and logs this information using TensorFlow's summary scalar. Additionally, it prepares an image for logging by concatenating images from different timesteps and batches. This helps track the shape and size of the input during training or inference passes. The code also handles TPUs and non-TPU workers separately by including debug summaries if needed.",
+        "type": "comment"
+    },
+    "292": {
+        "file_id": 24,
+        "content": "      tf.summary.image(\n          'observations/image',\n          image,\n          step=self._train_step_counter,\n          # Single output since we have concatenated images along batch.\n          max_outputs=1)\n      # [b, t], strings\n      if 'natural_language_instruction' in observations:\n        task = observations['natural_language_instruction'][:, 0]\n        tf.summary.text(\n            'natural_language_instruction', task, step=self._train_step_counter)\n      if self.attention_scores and not self._use_token_learner:\n        for l_idx, layer_attention_score in enumerate(self.attention_scores):\n          logging.info('Attention score shape: %s, %s', l_idx,\n                       layer_attention_score.shape)\n          for head_idx in range(layer_attention_score.shape[1]):\n            pairwise_attention = tf.expand_dims(\n                layer_attention_score[:, head_idx], -1)\n            # pairwise attention shape (16, 552, 552, 1)\n            # make attention from different time steps comparable\n            pairwise_attention = pairwise_attention * np.arange(",
+        "type": "code",
+        "location": "/transformer_network.py:438-459"
+    },
+    "293": {
+        "file_id": 24,
+        "content": "This code snippet is part of a transformer network. It logs image and text data for training, and if attention scores are enabled, it also logs pairwise attention scores. The logging is done using TensorFlow's summary functions to store the information as summaries. These summaries will be used by TensorBoard, a visualization tool provided by TensorFlow, to help in monitoring and analyzing the model during training.",
+        "type": "comment"
+    },
+    "294": {
+        "file_id": 24,
+        "content": "                1, pairwise_attention.shape[1] + 1)[None, :, None, None]\n            # visualize spatial attention, note this only supports\n            # mk1_500tasks_transformer pipeline with no token learner\n            img_tf_ts = tf.reshape(\n                tf.transpose(\n                    tf.reshape(\n                        tf.reduce_sum(pairwise_attention, axis=1) / np.arange(\n                            pairwise_attention.shape[1], 0, -1)[None, :, None],\n                        [batch_size, num_ts, -1]),\n                    [0, 2, 1])[:, :-self._tokens_per_action, :],\n                [-1, 9, 9, num_ts])\n            img_tf_ts = tf.image.resize(\n                img_tf_ts, [image_h, image_w],\n                method=tf.image.ResizeMethod.NEAREST_NEIGHBOR)\n            img_tf_ts_concat = tf.concat(tf.unstack(img_tf_ts, axis=3), 2)\n            img_tf_ts_concat_min = tf.reduce_min(\n                img_tf_ts_concat, axis=[1, 2], keepdims=True)\n            img_tf_ts_concat = (img_tf_ts_concat - img_tf_ts_concat_min) / (",
+        "type": "code",
+        "location": "/transformer_network.py:460-479"
+    },
+    "295": {
+        "file_id": 24,
+        "content": "This code calculates the spatial attention for a transformer network and visualizes it, supporting a specific pipeline configuration. The spatial attention is calculated by summing pairwise attention values and normalizing them. Then, the result is resized and concatenated to form an image-like output. This process requires specific dimensions and parameters for visualization.",
+        "type": "comment"
+    },
+    "296": {
+        "file_id": 24,
+        "content": "                tf.reduce_max(img_tf_ts_concat, axis=[1, 2], keepdims=True) -\n                img_tf_ts_concat_min)\n            img_tf_ts_concat = tf.concat(\n                tf.unstack(img_tf_ts_concat, axis=0)[:8], 0)\n            img_tf_ts_concat = tf.expand_dims(\n                tf.expand_dims(img_tf_ts_concat, 0), -1)\n            tf.summary.image(\n                'attention/layer_{}/head_{}'.format(l_idx, head_idx),\n                img_tf_ts_concat,\n                step=self._train_step_counter,\n                # Single output since we have concatenated images along batch.\n                max_outputs=1)\n            if img_tf_ts_concat.shape[1] == image.shape[\n                1] and img_tf_ts_concat.shape[2] == image.shape[2]:\n              # can overlay\n              overlay_viz = tf.cast(\n                  (tf.cast(image, tf.float32) * (0.2 + img_tf_ts_concat) / 1.2),\n                  tf.uint8)\n              tf.summary.image(\n                  'overlay_attention/layer_{}/head_{}'.format(l_idx, head_idx),",
+        "type": "code",
+        "location": "/transformer_network.py:480-500"
+    },
+    "297": {
+        "file_id": 24,
+        "content": "This code segment is part of a transformer network. It calculates attention scores for each head in a layer and visualizes them as images. It concatenates input sequences, subtracts minimum value from maximum, and reshapes the output. The resulting image is then overlaid on the original image using element-wise multiplication, and both are visualized in separate summaries.",
+        "type": "comment"
+    },
+    "298": {
+        "file_id": 24,
+        "content": "                  overlay_viz,\n                  step=self._train_step_counter,\n                  # Single output since we have concatenated images along batch.\n                  max_outputs=1)\n    # log action info\n    action_labels = tf.boolean_mask(logging_info['action_labels'],\n                                    logging_info['actor_loss_mask'])\n    action_predictions = tf.boolean_mask(logging_info['action_predictions'],\n                                         logging_info['actor_loss_mask'])\n    with tf.name_scope('ActionTokens'):\n      token_accuracy = (\n          tf.cast(tf.equal(action_labels, action_predictions), tf.float32))\n      accuracy = tf.reduce_mean(token_accuracy)\n      tf.compat.v2.summary.scalar(\n          name='accuracy', data=accuracy, step=self._train_step_counter)\n      # Accuracy across timesteps\n      for t in range(self._time_sequence_length):\n        tf.compat.v2.summary.scalar(\n            name='accuracy/time_step/{}'.format(t),\n            data=tf.reduce_mean(token_accuracy[:, t, :]),",
+        "type": "code",
+        "location": "/transformer_network.py:501-521"
+    },
+    "299": {
+        "file_id": 24,
+        "content": "This code logs action information for a transformer network. It calculates the accuracy of action predictions against action labels, and logs the accuracy using TensorFlow's summary scalar function. The accuracy is averaged across time steps to provide a comprehensive evaluation of the model's performance.",
+        "type": "comment"
+    }
+}
