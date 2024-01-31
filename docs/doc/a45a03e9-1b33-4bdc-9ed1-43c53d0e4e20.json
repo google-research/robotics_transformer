@@ -1,0 +1,15 @@
+{
+    "summary": "The code is for the Robotics Transformer (RT-1) library, featuring an efficient net image tokenizer backbone and transformer model for robotic control. Trained on 700 tasks and jointly trained on EDR and Kuka data, instructions and checkpoints are provided in TensorFlow format. It's licensed under Apache.",
+    "details": [
+        {
+            "comment": "This code is for the Robotics Transformer (RT-1), a collection of files and artifacts for running an efficient net based image tokenizer backbone, transformer for end to end robotic control, and testing utilities. It provides installation instructions, test running guidelines, and uses trained checkpoints for three models: RT-1 trained on 700 tasks, and RT-1 jointly trained on EDR and Kuka data.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/README.md\":0-39",
+            "content": "# Robotics Transformer\n*This is not an officially supported Google product.*\nThis repository is a collection code files and artifacts for running\nRobotics Transformer or RT-1.\n## Features\n* Film efficient net based image tokenizer backbone\n* Token learner based compression of input tokens\n* Transformer for end to end robotic control\n* Testing utilities\n## Getting Started\n### Installation\nClone the repo\n```bash\ngit clone https://github.com/google-research/robotics_transformer.git\npip install -r robotics_transformer/requirements.txt\npython -m robotics_transformer.tokenizers.action_tokenizer.test\n```\n### Running Tests\nTo run RT-1 tests, you can clone the git repo and run\n[bazel](https://bazel.build/):\n```bash\ngit clone https://github.com/google_research/robotics_transformer.git\ncd robotics_transformer\nbazel test ...\n```\n### Using trained checkpoints\nCheckpoints are included in trained_checkpoints/ folder for three models:\n1. [RT-1 trained on 700 tasks](trained_checkpoints/rt1main)\n2. [RT-1 jointly trained on EDR and Kuka data](trained_checkpoints/rt1multirobot)"
+        },
+        {
+            "comment": "The code provides information about the Robotics Transformer library, specifically mentioning the RT-1 model that has been jointly trained on simulated and real data. The files are TensorFlow SavedModel format, and instructions for their usage can be found at a provided link. Additionally, the repository contains an initial set of libraries for early adoption, with potential addition of more components in future releases. The library is licensed under the Apache license.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/README.md\":40-53",
+            "content": "3. [RT-1 jointly trained on sim and real data](trained_checkpoints/rt1simreal)\nThey are tensorflow SavedModel files. Instructions on usage can be found [here](https://www.tensorflow.org/guide/saved_model)\n## Future Releases\nThe current repository includes an initial set of libraries for early adoption.\nMore components may come in future releases.\n## License\nThe Robotics Transformer library is licensed under the terms of the Apache\nlicense."
+        }
+    ]
+}

@@ -1,0 +1,15 @@
+{
+    "summary": "This code tests the TokenLearnerModule in the tokenizers package of the robotics_transformer library using TensorFlow. It defines a class, TokenLearnerTest, which takes parameters for embedding dimension and number of tokens, creating a random input vector. The test ensures output tokens match expected format [batch * seq, num_tokens, embedding_dim].",
+    "details": [
+        {
+            "comment": "This code is for testing the TokenLearnerModule in the tokenizers package of the robotics_transformer library. It uses TensorFlow and defines a class, TokenLearnerTest, which tests the module with different input sizes and dimensions. The test takes parameters for embedding dimension and number of tokens, and creates a random input vector of shape (batch * seq, 81, embedding_dim).",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/tokenizers/token_learner_test.py\":0-28",
+            "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for token_learner.\"\"\"\nfrom absl.testing import parameterized\nfrom robotics_transformer.tokenizers import token_learner\nimport tensorflow as tf\nclass TokenLearnerTest(parameterized.TestCase):\n  @parameterized.named_parameters(('sample_input', 512, 8))\n  def testTokenLearner(self, embedding_dim, num_tokens):\n    batch = 1\n    seq = 2\n    token_learner_layer = token_learner.TokenLearnerModule(\n        num_tokens=num_tokens)\n    inputvec = tf.random.normal(shape=(batch * seq, 81, embedding_dim))"
+        },
+        {
+            "comment": "Code tests the shape of output tokens from token learner layer, ensuring it matches expected format [batch * seq, num_tokens, embedding_dim].",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/tokenizers/token_learner_test.py\":30-36",
+            "content": "    learnedtokens = token_learner_layer(inputvec)\n    self.assertEqual(learnedtokens.shape,\n                     [batch * seq, num_tokens, embedding_dim])\nif __name__ == '__main__':\n  tf.test.main()"
+        }
+    ]
+}

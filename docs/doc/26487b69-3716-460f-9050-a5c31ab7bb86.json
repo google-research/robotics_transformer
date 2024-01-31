@@ -1,0 +1,10 @@
+{
+    "summary": "This code is for testing the SequenceAgent in TensorFlow using tf_agents library. It defines a class SequenceAgentTest that inherits from SequenceAgentTestSetUp and includes a testAsTransitionType method. This method creates an agent, checks if its as_transition attribute is of type data_converter.AsHalfTransition, and asserts it to be true. The code also includes licensing information and main function to run the tests.",
+    "details": [
+        {
+            "comment": "This code is for testing the SequenceAgent in TensorFlow using tf_agents library. It defines a class SequenceAgentTest that inherits from SequenceAgentTestSetUp and includes a testAsTransitionType method. This method creates an agent, checks if its as_transition attribute is of type data_converter.AsHalfTransition, and asserts it to be true. The code also includes licensing information and main function to run the tests.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/sequence_agent_test.py\":0-27",
+            "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for sequence_agent.\"\"\"\nfrom robotics_transformer.sequence_agent_test_set_up import SequenceAgentTestSetUp\nimport tensorflow as tf\nfrom tf_agents.agents import data_converter\nclass SequenceAgentTest(SequenceAgentTestSetUp):\n  def testAsTransitionType(self):\n    agent = self.create_agent_and_initialize()\n    self.assertIsInstance(agent.as_transition, data_converter.AsHalfTransition)\nif __name__ == '__main__':\n  tf.test.main()"
+        }
+    ]
+}

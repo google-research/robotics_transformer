@@ -1,0 +1,406 @@
+{
+    "300": {
+        "file_id": 24,
+        "content": "            step=self._train_step_counter)\n      token_index = 0\n      for k in self._action_tokenizer.action_order:\n        spec = self._action_tokenizer.action_spec[k]\n        if spec.dtype == tf.int32:\n          n_tokens = 1\n        else:\n          n_tokens = spec.shape[0]\n        action_token_accuracy = tf.reduce_mean(\n            token_accuracy[:, :, token_index:token_index + n_tokens])\n        tf.compat.v2.summary.scalar(\n            name='accuracy/action_type/{}'.format(k),\n            data=action_token_accuracy,\n            step=self._train_step_counter)\n        for n in range(n_tokens):\n          tf.summary.histogram(\n              'tokens/{}_{}/labels'.format(k, n + 1),\n              action_labels[:, :, token_index],\n              step=self._train_step_counter)\n          tf.summary.histogram(\n              'tokens/{}_{}/predictions'.format(k, n + 1),\n              action_predictions[:, :, token_index],\n              step=self._train_step_counter)\n          token_index += 1\n    # log loss components\n    with tf.name_scope('TokenLosses'):",
+        "type": "code",
+        "location": "/transformer_network.py:522-548"
+    },
+    "301": {
+        "file_id": 24,
+        "content": "This code calculates the token accuracy and loss for each action token in the model, then logs these values using TensorFlow's summary function. It iterates through the available actions, handling both integer32 and other data types separately. For each token, it logs histograms of labels and predictions with their corresponding step number.",
+        "type": "comment"
+    },
+    "302": {
+        "file_id": 24,
+        "content": "      tf.compat.v2.summary.scalar(\n          name='action_loss',\n          data=tf.reduce_mean(logging_info['action_loss']),\n          step=self._train_step_counter)\n  def _tokenize_images(self, observations, network_state, training):\n    image = observations['image']  # [b, t, h, w, c]\n    outer_rank = self._get_outer_rank(observations)\n    if outer_rank == 1:  # This is an inference call\n      seq_idx = tf.reshape(network_state['seq_idx'], [1])[0]\n      time_step = tf.minimum(seq_idx, self._time_sequence_length - 1)\n      image = tf.expand_dims(image, 1)\n    image_shape = tf.shape(image)\n    b = image_shape[0]\n    input_t = image_shape[1]\n    h = image_shape[2]\n    w = image_shape[3]\n    c = image_shape[4]\n    context = self._extract_context_from_observation(observations, input_t)\n    image = tf.reshape(image, [b * input_t, h, w, c])\n    seed = tf.random.uniform(shape=(2,), maxval=2**30, dtype=tf.int32)\n    image = preprocessors.convert_dtype_and_crop_images(\n        image,\n        crop_size=self._crop_size,",
+        "type": "code",
+        "location": "/transformer_network.py:549-575"
+    },
+    "303": {
+        "file_id": 24,
+        "content": "This function tokenizes images for both training and inference calls. It reshapes the image to match the input shape required by the model, extracts context from observation, preprocesses the image by converting its data type and cropping it if necessary using a random seed.",
+        "type": "comment"
+    },
+    "304": {
+        "file_id": 24,
+        "content": "        training=training,\n        pad_then_crop=True,\n        convert_dtype=True,\n        seed=seed)\n    image = tf.reshape(image, [b, input_t, h, w, c])\n    context_image_tokens = self._image_tokenizer(\n        image, context=context, training=training)\n    num_tokens = tf.shape(context_image_tokens)[2]\n    context_image_tokens = tf.reshape(context_image_tokens,\n                                      [b, input_t, num_tokens, 1, -1])\n    if outer_rank == 1:  # This is an inference call\n      network_state['context_image_tokens'] = tf.reshape(\n          network_state['context_image_tokens'], [\n              b, self._time_sequence_length, self._tokens_per_context_image, 1,\n              -1\n          ])\n      state_image_tokens = network_state['context_image_tokens']\n      # network_state as input for this call is the output from the last call.\n      # Therefore, we need to shift all images to the left by 1 in the time axis\n      # to align w/ the time dim in this call.\n      state_image_tokens = tf.cond(\n          seq_idx == self._time_sequence_length,",
+        "type": "code",
+        "location": "/transformer_network.py:576-597"
+    },
+    "305": {
+        "file_id": 24,
+        "content": "This code reshapes the image and context_image_tokens, prepares them for input to the transformer network, and handles inference by shifting images to align with time dim. This ensures that each call to the transformer network receives appropriate inputs.",
+        "type": "comment"
+    },
+    "306": {
+        "file_id": 24,
+        "content": "          lambda: tf.roll(state_image_tokens, -1, axis=1),\n          lambda: state_image_tokens)\n      context_image_tokens = tf.concat([\n          state_image_tokens[:, :time_step, ...], context_image_tokens,\n          state_image_tokens[:, time_step + 1:, ...]\n      ],\n                                       axis=1)\n      network_state['context_image_tokens'] = context_image_tokens\n    return context_image_tokens, network_state\n  def _tokenize_actions(self, observations, network_state):\n    outer_rank = self._get_outer_rank(observations)\n    if outer_rank == 1:  # This is an inference call\n      action_tokens = tf.squeeze(network_state['action_tokens'], [3, 4])\n      seq_idx = tf.reshape(network_state['seq_idx'], [1])[0]\n      # network_state as input for this call is the output from the last call.\n      # Therefore, we need to shift all actions by 1 to the left.\n      action_tokens = tf.cond(seq_idx == self._time_sequence_length,\n                              lambda: tf.roll(action_tokens, -1, axis=1),",
+        "type": "code",
+        "location": "/transformer_network.py:598-618"
+    },
+    "307": {
+        "file_id": 24,
+        "content": "Code snippet performs image tokenization, concatenates tokens for context and state images, updates network state, and tokenizes actions for inference calls. It shifts all actions by 1 to the left if the sequence index equals the time sequence length.",
+        "type": "comment"
+    },
+    "308": {
+        "file_id": 24,
+        "content": "                              lambda: action_tokens)\n    else:\n      assert outer_rank == 2\n      if self._actions is None:\n        b, t = self._get_batch_size_and_seq_len(network_state)\n        action_tokens = tf.zeros(\n            shape=[b, t, self._tokens_per_action], dtype=tf.int32)\n      else:\n        action_tokens = self._action_tokenizer.tokenize(self._actions)\n    return action_tokens\n  def _assemble_input_token_sequence(self, context_image_tokens, action_tokens,\n                                     batch_size):\n    # embed action tokens\n    action_tokens = tf.one_hot(action_tokens, self._vocab_size)\n    action_tokens = self._action_token_emb(action_tokens)\n    action_tokens = tf.zeros_like(action_tokens)  # b/260260205\n    # Because of b/254902773, we need to add 1 extra dimension.\n    action_tokens = tf.expand_dims(action_tokens, axis=-2)\n    # assemble token sequence\n    input_token_sequence = tf.concat([context_image_tokens, action_tokens],\n                                     axis=2)\n    input_token_sequence = tf.reshape(",
+        "type": "code",
+        "location": "/transformer_network.py:619-644"
+    },
+    "309": {
+        "file_id": 24,
+        "content": "This code defines a method that retrieves action tokens and assembles them into the input token sequence. It first checks if outer_rank is 2, then gets the batch size and sequence length from the network state or assigns zeros to action tokens. If actions are not None, it tokenizes them using _action_tokenizer. Then, it embeds the action tokens, pads them with zeros, expands dimensions, concatenates context image tokens, and reshapes the result into the input token sequence.",
+        "type": "comment"
+    },
+    "310": {
+        "file_id": 24,
+        "content": "        input_token_sequence, [batch_size, -1, self._token_embedding_size])\n    return input_token_sequence\n  def _extract_context_from_observation(self, observations, seq_len):\n    \"\"\"Extract context from observation.\"\"\"\n    context = None\n    if 'natural_language_embedding' in observations:\n      outer_rank = self._get_outer_rank(observations)\n      context = observations['natural_language_embedding']  # [b, t, emb-size]\n      if outer_rank == 1:\n        context = tf.tile(context[:, None], [1, seq_len, 1])\n    return context\n  def set_actions(self, actions: tensorspec_utils.TensorSpecStruct):\n    \"\"\"Sets actions that will be tokenized and used in transformer network.\n    Args:\n      actions: actions to be tokenized and used in transformer network. example\n        actions are terminate = [0, 1] world_vector = [0.9, 0.8, -0.3]\n        rotation_delta = [-0.1, 0.2, .6] gripper_closedness = 0.9\n    \"\"\"\n    self._actions = actions\n  def _get_outer_rank(self, observations):\n    # used to determine training vs inference call",
+        "type": "code",
+        "location": "/transformer_network.py:645-669"
+    },
+    "311": {
+        "file_id": 24,
+        "content": "This code contains three functions: `_get_input_token_sequence`, `_extract_context_from_observation`, and `set_actions`. The first function, `_get_input_token_sequence`, returns the input token sequence. The second function, `_extract_context_from_observation`, extracts context from observations. Lastly, the `set_actions` function sets actions that will be tokenized and used in the transformer network. The code also contains a helper function, `_get_outer_rank`, which is used to determine if the call is for training or inference.",
+        "type": "comment"
+    },
+    "312": {
+        "file_id": 24,
+        "content": "    # outer_rank will be 2 -> [b, t] during training and\n    # outer_rank will be 1 -> [b] during inference\n    return nest_utils.get_outer_rank(observations, self._input_tensor_spec)\n  def _get_batch_size_and_seq_len(self, network_state):\n    image_shape = tf.shape(network_state['context_image_tokens'])\n    b = image_shape[0]\n    t = image_shape[1]\n    return b, t\n  def get_actor_loss(self) -> tf.Tensor:\n    return self._loss\n  def get_aux_info(self) -> dict[str, Any]:\n    return self._aux_info",
+        "type": "code",
+        "location": "/transformer_network.py:670-684"
+    },
+    "313": {
+        "file_id": 24,
+        "content": "The code contains three functions: 1) `get_outer_rank` returns the outer dimension rank of a tensor based on its shape and the input tensor specification, useful for batch sizes during training and inference. 2) `_get_batch_size_and_seq_len` extracts the batch size and sequence length from the image shape of the network state, which can be used to analyze data dimensions. 3) `get_actor_loss` and `get_aux_info` are getter methods for the actor loss and auxiliary information, respectively, in a transformer network context.",
+        "type": "comment"
+    },
+    "314": {
+        "file_id": 25,
+        "content": "/transformer_network_test.py",
+        "type": "filepath"
+    },
+    "315": {
+        "file_id": 25,
+        "content": "The code tests a transformer network's loss, inference, and causality using parameterized tests with different state specifications and observations. It creates an agent, sets parameters, generates masks, and asserts expected values while enabling eager execution.",
+        "type": "summary"
+    },
+    "316": {
+        "file_id": 25,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for networks.\"\"\"\nfrom absl.testing import parameterized\nfrom robotics_transformer import transformer_network\nfrom robotics_transformer.transformer_network_test_set_up import BATCH_SIZE\nfrom robotics_transformer.transformer_network_test_set_up import NAME_TO_INF_OBSERVATIONS\nfrom robotics_transformer.transformer_network_test_set_up import NAME_TO_STATE_SPECS\nfrom robotics_transformer.transformer_network_test_set_up import observations_list",
+        "type": "code",
+        "location": "/transformer_network_test.py:1-22"
+    },
+    "317": {
+        "file_id": 25,
+        "content": "This code is a test file for transformer networks in the robotics_transformer package. It imports necessary modules and sets up various parameters for testing, including batch size, observation names to inf observations mapping, state specs, and observations list.",
+        "type": "comment"
+    },
+    "318": {
+        "file_id": 25,
+        "content": "from robotics_transformer.transformer_network_test_set_up import spec_names_list\nfrom robotics_transformer.transformer_network_test_set_up import state_spec_list\nfrom robotics_transformer.transformer_network_test_set_up import TIME_SEQUENCE_LENGTH\nfrom robotics_transformer.transformer_network_test_set_up import TransformerNetworkTestUtils\nimport tensorflow as tf\nfrom tf_agents.specs import tensor_spec\nclass TransformerNetworkTest(TransformerNetworkTestUtils):\n  # pylint:disable=g-complex-comprehension\n  @parameterized.named_parameters([{\n      'testcase_name': '_' + name,\n      'state_spec': spec,\n      'train_observation': obs,\n  } for (name, spec,\n         obs) in zip(spec_names_list(), state_spec_list(), observations_list())]\n                                 )\n  # pylint:enable=g-complex-comprehension\n  def testTransformerTrainLossCall(self, state_spec, train_observation):\n    network = transformer_network.TransformerNetwork(\n        input_tensor_spec=state_spec,\n        output_tensor_spec=self._action_spec,",
+        "type": "code",
+        "location": "/transformer_network_test.py:23-46"
+    },
+    "319": {
+        "file_id": 25,
+        "content": "This code defines a test class for the TransformerNetworkTestUtils. It imports necessary modules, sets up parameters using @parameterized decorator from tensorflow/transform, and creates an instance of TransformerNetwork with input and output tensor specs. The class then tests the train loss call of the transformer network model.",
+        "type": "comment"
+    },
+    "320": {
+        "file_id": 25,
+        "content": "        time_sequence_length=TIME_SEQUENCE_LENGTH)\n    network.create_variables()\n    self.assertNotEmpty(network.variables)\n    network.set_actions(self._train_action)\n    network_state = tensor_spec.sample_spec_nest(\n        network.state_spec, outer_dims=[BATCH_SIZE])\n    output_actions, network_state = network(\n        train_observation, step_type=None, network_state=network_state)\n    expected_shape = [2, 3]\n    self.assertEqual(network.get_actor_loss().shape,\n                     tf.TensorShape(expected_shape))\n    self.assertCountEqual(self._train_action.keys(), output_actions.keys())\n  # pylint:disable=g-complex-comprehension\n  @parameterized.named_parameters([{\n      'testcase_name': '_' + name,\n      'spec_name': name,\n  } for name in spec_names_list()])\n  # pylint:enable=g-complex-comprehension\n  def testTransformerInferenceLossCall(self, spec_name):\n    state_spec = NAME_TO_STATE_SPECS[spec_name]\n    observation = NAME_TO_INF_OBSERVATIONS[spec_name]\n    network = transformer_network.TransformerNetwork(",
+        "type": "code",
+        "location": "/transformer_network_test.py:47-72"
+    },
+    "321": {
+        "file_id": 25,
+        "content": "This code initializes a transformer network and asserts its variables, sets actions, performs inference, and tests the loss calculation. It uses a named parameterized test function to run multiple tests with different specifications.",
+        "type": "comment"
+    },
+    "322": {
+        "file_id": 25,
+        "content": "        input_tensor_spec=state_spec,\n        output_tensor_spec=self._action_spec,\n        time_sequence_length=TIME_SEQUENCE_LENGTH,\n        action_order=[\n            'terminate_episode', 'world_vector', 'rotation_delta',\n            'gripper_closedness_action'\n        ])\n    network.create_variables()\n    self.assertNotEmpty(network.variables)\n    network.set_actions(self._inference_action)\n    # inference currently only support batch size of 1\n    network_state = tensor_spec.sample_spec_nest(\n        network.state_spec, outer_dims=[1])\n    output_actions, network_state = network(\n        observation, step_type=None, network_state=network_state)\n    tf.debugging.assert_equal(network.get_actor_loss(), 0.0)\n    self.assertCountEqual(self._inference_action.keys(), output_actions.keys())\n  # pylint:disable=g-complex-comprehension\n  @parameterized.named_parameters([{\n      'testcase_name': '_' + name,\n      'state_spec': spec,\n      'train_observation': obs,\n  } for name, spec, obs in zip(spec_names_list(), state_spec_list(),",
+        "type": "code",
+        "location": "/transformer_network_test.py:73-99"
+    },
+    "323": {
+        "file_id": 25,
+        "content": "The code creates a transformer network, initializes its variables, sets actions for inference and tests the network's output. It also checks actor loss, compares input and output actions, and runs parameterized tests with different state specifications and observations.",
+        "type": "comment"
+    },
+    "324": {
+        "file_id": 25,
+        "content": "                               observations_list())])\n  # pylint:enable=g-complex-comprehension\n  def testTransformerLogging(self, state_spec, train_observation):\n    network = transformer_network.TransformerNetwork(\n        input_tensor_spec=state_spec,\n        output_tensor_spec=self._action_spec,\n        time_sequence_length=TIME_SEQUENCE_LENGTH,\n        action_order=[\n            'terminate_episode', 'world_vector', 'rotation_delta',\n            'gripper_closedness_action'\n        ])\n    network.create_variables()\n    self.assertNotEmpty(network.variables)\n    network.set_actions(self._train_action)\n    network_state = tensor_spec.sample_spec_nest(\n        network.state_spec, outer_dims=[BATCH_SIZE])\n    _ = network(train_observation, step_type=None, network_state=network_state)\n    network.add_summaries(\n        train_observation,\n        network.get_aux_info(),\n        debug_summaries=True,\n        training=True)\n  # pylint:disable=g-complex-comprehension\n  @parameterized.named_parameters([{\n      'testcase_name': '_' + name,",
+        "type": "code",
+        "location": "/transformer_network_test.py:100-127"
+    },
+    "325": {
+        "file_id": 25,
+        "content": "This code sets up a transformer network and asserts that it creates variables. It then initializes the actions, samples a batch of state specifications, passes in training observation to the network, adds summaries for training, and performs various parameterized tests.",
+        "type": "comment"
+    },
+    "326": {
+        "file_id": 25,
+        "content": "      'state_spec': spec,\n  } for name, spec in zip(spec_names_list(), state_spec_list())])\n  # pylint:enable=g-complex-comprehension\n  def testTransformerCausality(self, state_spec):\n    \"\"\"Tests the causality for the transformer.\n    Args:\n      state_spec: Which state spec to test the transformer with\n    \"\"\"\n    network = transformer_network.TransformerNetwork(\n        input_tensor_spec=state_spec,\n        output_tensor_spec=self._action_spec,\n        time_sequence_length=TIME_SEQUENCE_LENGTH)\n    network.create_variables()\n    self.assertNotEmpty(network.variables)\n    time_sequence_length = network._time_sequence_length\n    tokens_per_image = network._tokens_per_context_image\n    tokens_per_action = network._tokens_per_action\n    def _split_image_and_action_tokens(all_tokens):\n      image_start_indices = [(tokens_per_image + tokens_per_action) * k\n                             for k in range(time_sequence_length)]\n      image_tokens = tf.stack(\n          [all_tokens[i:i + tokens_per_image] for i in image_start_indices],",
+        "type": "code",
+        "location": "/transformer_network_test.py:128-152"
+    },
+    "327": {
+        "file_id": 25,
+        "content": "This code is testing the causality of a transformer network. It creates an instance of the network with input and output tensor specifications, then checks if the network has variables and extracts necessary parameters for testing. A helper function splits image and action tokens using given token counts and sequence length.",
+        "type": "comment"
+    },
+    "328": {
+        "file_id": 25,
+        "content": "          axis=0)\n      action_start_indices = [i + tokens_per_image for i in image_start_indices]\n      action_tokens = [\n          tf.stack([\n              all_tokens[i:i + tokens_per_action] for i in action_start_indices\n          ], 0)\n      ]\n      image_tokens = tf.one_hot(image_tokens, network._token_embedding_size)\n      # Remove extra dimension before the end once b/254902773 is fixed.\n      shape = image_tokens.shape\n      # Add batch dimension.\n      image_tokens = tf.reshape(image_tokens,\n                                [1] + shape[:-1] + [1] + shape[-1:])\n      return image_tokens, action_tokens\n    # Generate some random tokens for image and actions.\n    all_tokens = tf.random.uniform(\n        shape=[time_sequence_length * (tokens_per_image + tokens_per_action)],\n        dtype=tf.int32,\n        maxval=10,\n        minval=0)\n    context_image_tokens, action_tokens = _split_image_and_action_tokens(\n        all_tokens)\n    # Get the output tokens without any zeroed out input tokens.\n    output_tokens = network._transformer_call(",
+        "type": "code",
+        "location": "/transformer_network_test.py:153-177"
+    },
+    "329": {
+        "file_id": 25,
+        "content": "The code above is part of a transformer network test, where it generates random tokens for image and actions. It splits the image and action tokens from a list of all tokens. Then it calls the transformer network to get output tokens without any zeroed-out input tokens. The context_image_tokens and action_tokens are obtained by splitting the all_tokens using image_start_indices and tokens_per_action. The image_tokens are one-hot encoded and reshaped to add a batch dimension.",
+        "type": "comment"
+    },
+    "330": {
+        "file_id": 25,
+        "content": "        context_image_tokens=context_image_tokens,\n        action_tokens=action_tokens,\n        attention_mask=network._default_attention_mask,\n        batch_size=1,\n        training=False)[0]\n    for t in range(time_sequence_length *\n                   (tokens_per_image + tokens_per_action)):\n      # Zero out future input tokens.\n      all_tokens_at_t = tf.concat(\n          [all_tokens[:t + 1],\n           tf.zeros_like(all_tokens[t + 1:])], 0)\n      context_image_tokens, action_tokens = _split_image_and_action_tokens(\n          all_tokens_at_t)\n      # Get the output tokens with zeroed out input tokens after t.\n      output_tokens_at_t = network._transformer_call(\n          context_image_tokens=context_image_tokens,\n          action_tokens=action_tokens,\n          attention_mask=network._default_attention_mask,\n          batch_size=1,\n          training=False)[0]\n      # The output token is unchanged if future input tokens are zeroed out.\n      self.assertAllEqual(output_tokens[:t + 1], output_tokens_at_t[:t + 1])",
+        "type": "code",
+        "location": "/transformer_network_test.py:178-200"
+    },
+    "331": {
+        "file_id": 25,
+        "content": "This code segment tests the transformer network by feeding it a time sequence of input tokens and checking if the output token remains unchanged when future input tokens are zeroed out. It ensures the network does not rely on future input tokens to produce the current output.",
+        "type": "comment"
+    },
+    "332": {
+        "file_id": 25,
+        "content": "  def testLossMasks(self):\n    self._define_specs()\n    self._create_agent()\n    image_tokens = 3\n    action_tokens = 2\n    self._agent._actor_network._time_sequence_length = 2\n    self._agent._actor_network._tokens_per_context_image = image_tokens\n    self._agent._actor_network._tokens_per_action = action_tokens\n    self._agent._actor_network._generate_masks()\n    self.assertAllEqual(\n        self._agent._actor_network._action_tokens_mask,\n        tf.constant([\n            image_tokens, image_tokens + 1, 2 * image_tokens + action_tokens,\n            2 * image_tokens + action_tokens + 1\n        ], tf.int32))\n    self._agent._actor_network._generate_masks()\n    self.assertAllEqual(\n        self._agent._actor_network._action_tokens_mask,\n        tf.constant([\n            image_tokens, image_tokens + 1, 2 * (image_tokens) + action_tokens,\n            2 * (image_tokens) + action_tokens + 1\n        ], tf.int32))\nif __name__ == '__main__':\n  # Useful to enable if running with ipdb.\n  tf.config.run_functions_eagerly(True)",
+        "type": "code",
+        "location": "/transformer_network_test.py:202-228"
+    },
+    "333": {
+        "file_id": 25,
+        "content": "The code defines a test function `testLossMasks` that creates an agent, sets specific parameters, generates masks for action tokens, and asserts the generated mask values match expected values. The code also enables eager execution.",
+        "type": "comment"
+    },
+    "334": {
+        "file_id": 25,
+        "content": "  tf.test.main()",
+        "type": "code",
+        "location": "/transformer_network_test.py:229-229"
+    },
+    "335": {
+        "file_id": 25,
+        "content": "This code is invoking the main test function of TensorFlow library to execute all tests defined in the current file.",
+        "type": "comment"
+    },
+    "336": {
+        "file_id": 26,
+        "content": "/transformer_network_test_set_up.py",
+        "type": "filepath"
+    },
+    "337": {
+        "file_id": 26,
+        "content": "The code configures testing parameters for robotics_transformer, sets up FakeImageTokenizer class and test data, defines constants, functions, and a transformer network using TensorFlow for image processing and robotics. It constructs a Transformer network for training and tests its functionality, ensuring alignment, verifying indexing, and updating output tokens.",
+        "type": "summary"
+    },
+    "338": {
+        "file_id": 26,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for networks.\"\"\"\nimport copy\nfrom typing import Optional, Tuple, Union\nfrom absl.testing import parameterized\nimport numpy as np\nfrom robotics_transformer import sequence_agent\nfrom robotics_transformer import transformer_network\nfrom tensor2robot.utils import tensorspec_utils\nimport tensorflow as tf\nfrom tf_agents.specs import tensor_spec\nfrom tf_agents.trajectories import time_step as ts\nBATCH_SIZE = 2\nTIME_SEQUENCE_LENGTH = 3\nHEIGHT = 256",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:1-30"
+    },
+    "339": {
+        "file_id": 26,
+        "content": "Code block contains necessary import statements and variable definitions for tests related to networks in the robotics_transformer package. The code sets up parameters for testing, including batch size, time sequence length, and height dimensions.",
+        "type": "comment"
+    },
+    "340": {
+        "file_id": 26,
+        "content": "WIDTH = 320\nNUM_IMAGE_TOKENS = 2\ndef spec_names_list() -> list[str]:\n  \"\"\"Lists the different types of specs accepted by the transformer.\"\"\"\n  return ['default']\ndef state_spec_list() -> list[tensorspec_utils.TensorSpecStruct]:\n  \"\"\"Lists the different types of state spec accepted by the transformer.\"\"\"\n  state_spec = tensorspec_utils.TensorSpecStruct()\n  state_spec.image = tensor_spec.BoundedTensorSpec([HEIGHT, WIDTH, 3],\n                                                   dtype=tf.float32,\n                                                   name='image',\n                                                   minimum=0.,\n                                                   maximum=1.)\n  state_spec.natural_language_embedding = tensor_spec.TensorSpec(\n      shape=[512], dtype=tf.float32, name='natural_language_embedding')\n  state_spec_mask = copy.deepcopy(state_spec)\n  state_spec_mask.initial_binary_mask = tensor_spec.BoundedTensorSpec(\n      [HEIGHT, WIDTH, 1],\n      dtype=tf.int32,\n      name='initial_binary_mask',",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:31-55"
+    },
+    "341": {
+        "file_id": 26,
+        "content": "This code defines constants WIDTH and NUM_IMAGE_TOKENS, and functions spec_names_list() and state_spec_list(). The former lists types of specs accepted by the transformer. The latter defines different types of state specs including image and natural language embedding.",
+        "type": "comment"
+    },
+    "342": {
+        "file_id": 26,
+        "content": "      minimum=0,\n      maximum=255)\n  state_spec_tcl = copy.deepcopy(state_spec)\n  state_spec_tcl.original_image = tensor_spec.BoundedTensorSpec(\n      [HEIGHT, WIDTH, 3],\n      dtype=tf.float32,\n      name='original_image',\n      minimum=0.,\n      maximum=1.)\n  return [\n      state_spec,\n      state_spec_mask,\n      state_spec_tcl,\n  ]\ndef observations_list(training: bool = True) -> list[dict[str, tf.Tensor]]:\n  \"\"\"Lists the different types of observations accepted by the transformer.\"\"\"\n  if training:\n    image_shape = [BATCH_SIZE, TIME_SEQUENCE_LENGTH, HEIGHT, WIDTH, 3]\n    emb_shape = [BATCH_SIZE, TIME_SEQUENCE_LENGTH, 512]\n    mask_shape = [BATCH_SIZE, TIME_SEQUENCE_LENGTH, HEIGHT, WIDTH, 1]\n  else:\n    # inference currently only support batch size of 1\n    image_shape = [1, HEIGHT, WIDTH, 3]\n    emb_shape = [1, 512]\n    mask_shape = [1, HEIGHT, WIDTH, 1]\n  return [\n      {\n          'image': tf.constant(0.5, shape=image_shape),\n          'natural_language_embedding': tf.constant(1., shape=emb_shape),\n      },",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:56-89"
+    },
+    "343": {
+        "file_id": 26,
+        "content": "The function `setup_state_spec()` creates a state specification for the transformer network, including bounded and unbounded tensor specifications. The `observations_list()` function lists the different types of observations accepted by the transformer during training or inference. During training, it expects a batch size of 256 with additional dimensions for time sequence length and spatial image dimensions. In inference mode, only a single image is expected. These specifications are used to define the shape and type of input data for the network.",
+        "type": "comment"
+    },
+    "344": {
+        "file_id": 26,
+        "content": "      {\n          'image': tf.constant(0.5, shape=image_shape),\n          'natural_language_embedding': tf.constant(1., shape=emb_shape),\n          'initial_binary_mask': tf.constant(192, shape=mask_shape),\n      },\n      {  # This is used for TCL.\n          'image': tf.constant(0.5, shape=image_shape),\n          'original_image': tf.constant(0.4, shape=image_shape),\n          'natural_language_embedding': tf.constant(1., shape=emb_shape),\n      },\n  ]\nNAME_TO_STATE_SPECS = dict(zip(spec_names_list(), state_spec_list()))\nNAME_TO_OBSERVATIONS = dict(zip(spec_names_list(), observations_list()))\nNAME_TO_INF_OBSERVATIONS = dict(\n    zip(spec_names_list(), observations_list(False)))\nclass FakeImageTokenizer(tf.keras.layers.Layer):\n  \"\"\"Fake Image Tokenizer for testing Transformer.\"\"\"\n  def __init__(self,\n               encoder: ...,\n               position_embedding: ...,\n               embedding_output_dim: int,\n               patch_size: int,\n               use_token_learner: bool = False,\n               num_tokens: int = NUM_IMAGE_TOKENS,",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:90-118"
+    },
+    "345": {
+        "file_id": 26,
+        "content": "This code snippet defines a FakeImageTokenizer class for testing Transformer models. It also sets up various test data dictionaries, including initial state specifications and observations. The code includes constants for image shape, embedding shape, and mask shape. It also uses TensorFlow constants to create fake image and natural language embedding data.",
+        "type": "comment"
+    },
+    "346": {
+        "file_id": 26,
+        "content": "               use_initial_binary_mask: bool = False,\n               **kwargs):\n    del encoder, position_embedding, patch_size, use_token_learner\n    super().__init__(**kwargs)\n    self.tokens_per_context_image = num_tokens\n    if use_initial_binary_mask:\n      self.tokens_per_context_image += 1\n    self.embedding_output_dim = embedding_output_dim\n    self.use_initial_binary_mask = use_initial_binary_mask\n  def __call__(self,\n               image: tf.Tensor,\n               context: Optional[tf.Tensor] = None,\n               initial_binary_mask: Optional[tf.Tensor] = None,\n               training: bool = False) -> tf.Tensor:\n    if self.use_initial_binary_mask:\n      assert initial_binary_mask is not None\n    image_shape = tf.shape(image)\n    seq_size = image_shape[1]\n    batch_size = image_shape[0]\n    all_tokens = []\n    num_tokens = self.tokens_per_context_image\n    for t in range(seq_size):\n      tokens = tf.ones([batch_size, 1, num_tokens, self.embedding_output_dim\n                       ]) * image[0][t][0][0]",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:119-143"
+    },
+    "347": {
+        "file_id": 26,
+        "content": "This code is setting up a transformer network for image processing. It takes an image and optionally a context tensor as input, and outputs a transformed tensor. The number of tokens used per context image is determined by the `tokens_per_context_image` attribute. If `use_initial_binary_mask` is set to True, one additional token will be used. Initial binary mask should not be None if using initial binary mask. The code then loops through each sequence in the batch and creates a tensor of tokens for each sequence. Each token is initialized with a value from the first image in the batch at the corresponding time step.",
+        "type": "comment"
+    },
+    "348": {
+        "file_id": 26,
+        "content": "      all_tokens.append(tokens)\n    return tf.concat(all_tokens, axis=1)\nclass TransformerNetworkTestUtils(tf.test.TestCase, parameterized.TestCase):\n  \"\"\"Defines specs, SequenceAgent, and various other testing utilities.\"\"\"\n  def _define_specs(self,\n                    train_batch_size=BATCH_SIZE,\n                    inference_batch_size=1,\n                    time_sequence_length=TIME_SEQUENCE_LENGTH,\n                    inference_sequence_length=TIME_SEQUENCE_LENGTH,\n                    token_embedding_size=512,\n                    image_width=WIDTH,\n                    image_height=HEIGHT):\n    \"\"\"Defines specs and observations (both training and inference).\"\"\"\n    self.train_batch_size = train_batch_size\n    self.inference_batch_size = inference_batch_size\n    self.time_sequence_length = time_sequence_length\n    self.inference_sequence_length = inference_sequence_length\n    self.token_embedding_size = token_embedding_size\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.world_vector = tensor_spec.BoundedTensorSpec(",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:144-166"
+    },
+    "349": {
+        "file_id": 26,
+        "content": "This code defines a class named TransformerNetworkTestUtils that extends tf.test.TestCase and parameterized.TestCase. It also includes a method named _define_specs which defines specs, observations for training and inference, batch sizes, sequence lengths, token embedding size, and an action spec. The purpose of this code is to set up test specifications and utilities for the TransformerNetworkTest class.",
+        "type": "comment"
+    },
+    "350": {
+        "file_id": 26,
+        "content": "        (3,), dtype=tf.float32, minimum=-1., maximum=1., name='world_vector')\n    action_spec.rotation_delta = tensor_spec.BoundedTensorSpec(\n        (3,),\n        dtype=tf.float32,\n        minimum=-np.pi / 2,\n        maximum=np.pi / 2,\n        name='rotation_delta')\n    action_spec.gripper_closedness_action = tensor_spec.BoundedTensorSpec(\n        (1,),\n        dtype=tf.float32,\n        minimum=-1.,\n        maximum=1.,\n        name='gripper_closedness_action')\n    action_spec.terminate_episode = tensor_spec.BoundedTensorSpec(\n        (2,), dtype=tf.int32, minimum=0, maximum=1, name='terminate_episode')\n    state_spec = tensorspec_utils.TensorSpecStruct()\n    state_spec.image = tensor_spec.BoundedTensorSpec(\n        [image_height, image_width, 3],\n        dtype=tf.float32,\n        name='image',\n        minimum=0.,\n        maximum=1.)\n    state_spec.natural_language_embedding = tensor_spec.TensorSpec(\n        shape=[self.token_embedding_size],\n        dtype=tf.float32,\n        name='natural_language_embedding')\n    self._policy_info_spec = {",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:167-196"
+    },
+    "351": {
+        "file_id": 26,
+        "content": "This code sets up the action and state specifications for a robotics transformer network. The action_spec includes specifications for world vector, rotation delta, gripper closedness action, and terminate episode actions. The state_spec includes specifications for image and natural language embedding. These specifications define the data types, shapes, and boundaries of the input data for both actions and states.",
+        "type": "comment"
+    },
+    "352": {
+        "file_id": 26,
+        "content": "        'return':\n            tensor_spec.BoundedTensorSpec((),\n                                          dtype=tf.float32,\n                                          minimum=0.0,\n                                          maximum=1.0,\n                                          name='return'),\n        'discounted_return':\n            tensor_spec.BoundedTensorSpec((),\n                                          dtype=tf.float32,\n                                          minimum=0.0,\n                                          maximum=1.0,\n                                          name='discounted_return'),\n    }\n    self._state_spec = state_spec\n    self._action_spec = action_spec\n    self._inference_observation = {\n        'image':\n            tf.constant(\n                1,\n                shape=[self.inference_batch_size, image_height, image_width, 3],\n                dtype=tf.dtypes.float32),\n        'natural_language_embedding':\n            tf.constant(\n                1.,\n                shape=[self.inference_batch_size, self.token_embedding_size],",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:197-223"
+    },
+    "353": {
+        "file_id": 26,
+        "content": "This code defines the data types and specifications for a robotics transformer network. It includes 'return', 'discounted_return' as bounded tensor specs with float32 datatype, and minimum and maximum values set to 0.0 and 1.0 respectively. The state and action specifications are also defined. An inference observation is created with a constant image shape and natural language embedding shape for inference batch size and token embedding size respectively.",
+        "type": "comment"
+    },
+    "354": {
+        "file_id": 26,
+        "content": "                dtype=tf.dtypes.float32),\n    }\n    self._train_observation = {\n        'image':\n            tf.constant(\n                0.5,\n                shape=[\n                    self.train_batch_size, self.time_sequence_length,\n                    image_height, image_width, 3\n                ]),\n        'natural_language_embedding':\n            tf.constant(\n                1.,\n                shape=[\n                    self.train_batch_size, self.time_sequence_length,\n                    self.token_embedding_size\n                ]),\n    }\n    self._inference_action = {\n        'world_vector':\n            tf.constant(0.5, shape=[self.inference_batch_size, 3]),\n        'rotation_delta':\n            tf.constant(0.5, shape=[self.inference_batch_size, 3]),\n        'terminate_episode':\n            tf.constant(\n                [0, 1] * self.inference_batch_size,\n                shape=[self.inference_batch_size, 2]),\n        'gripper_closedness_action':\n            tf.constant(0.5, shape=[self.inference_batch_size, 1]),",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:224-252"
+    },
+    "355": {
+        "file_id": 26,
+        "content": "This code sets up test data for a robotics transformer network. It defines constant values for train and inference actions, such as image, natural language embedding, world vector, rotation delta, terminate episode, and gripper closedness action, with shapes determined by batch size, time sequence length, and dimensions.",
+        "type": "comment"
+    },
+    "356": {
+        "file_id": 26,
+        "content": "    }\n    self._train_action = {\n        'world_vector':\n            tf.constant(\n                0.5,\n                shape=[self.train_batch_size, self.time_sequence_length, 3]),\n        'rotation_delta':\n            tf.constant(\n                0.5,\n                shape=[self.train_batch_size, self.time_sequence_length, 3]),\n        'terminate_episode':\n            tf.constant(\n                [0, 1] * self.train_batch_size * self.time_sequence_length,\n                shape=[self.train_batch_size, self.time_sequence_length, 2]),\n        'gripper_closedness_action':\n            tf.constant(\n                0.5,\n                shape=[self.train_batch_size, self.time_sequence_length, 1]),\n    }\n  def _create_agent(self, actor_network=None):\n    \"\"\"Creates SequenceAgent using custom actor_network.\"\"\"\n    time_step_spec = ts.time_step_spec(observation_spec=self._state_spec)\n    if actor_network is None:\n      actor_network = transformer_network.TransformerNetwork\n    self._agent = sequence_agent.SequenceAgent(",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:253-279"
+    },
+    "357": {
+        "file_id": 26,
+        "content": "This code is setting up a training action dictionary for the transformer network in a robotics application. It defines constants for 'world_vector', 'rotation_delta', 'terminate_episode', and 'gripper_closedness_action' within the self._train_action dictionary, with specified shapes and values. These values will be used to train the SequenceAgent, which uses a custom actor_network or default TransformerNetwork if none is provided.",
+        "type": "comment"
+    },
+    "358": {
+        "file_id": 26,
+        "content": "        time_step_spec=time_step_spec,\n        action_spec=self._action_spec,\n        actor_network=actor_network,\n        actor_optimizer=tf.keras.optimizers.Adam(),\n        train_step_counter=tf.compat.v1.train.get_or_create_global_step(),\n        time_sequence_length=TIME_SEQUENCE_LENGTH)\n    self._num_action_tokens = (\n        # pylint:disable=protected-access\n        self._agent._actor_network._action_tokenizer._tokens_per_action)\n    # pylint:enable=protected-access\n  def setUp(self):\n    self._define_specs()\n    super().setUp()\n  def get_image_value(self, step_idx: int) -> float:\n    return float(step_idx) / self.time_sequence_length\n  def get_action_logits(self, batch_size: int, value: int,\n                        vocab_size: int) -> tf.Tensor:\n    return tf.broadcast_to(\n        tf.one_hot(value % vocab_size, vocab_size)[tf.newaxis, tf.newaxis, :],\n        [batch_size, 1, vocab_size])\n  def create_obs(self, value) -> dict[str, tf.Tensor]:\n    observations = {}\n    observations['image'] = value * self._inference_observation['image']",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:280-306"
+    },
+    "359": {
+        "file_id": 26,
+        "content": "Code creates a Transformer network and sets up for testing. It defines utility functions to handle observations, gets image values, and generates action logits. It also defines the specs needed for the test setup.",
+        "type": "comment"
+    },
+    "360": {
+        "file_id": 26,
+        "content": "    observations[\n        'natural_language_embedding'] = value * self._inference_observation[\n            'natural_language_embedding']\n    return observations\n  def fake_action_token_emb(self, action_tokens) -> tf.Tensor:\n    \"\"\"Just pad with zeros.\"\"\"\n    shape = action_tokens.shape\n    assert self.vocab_size > self.token_embedding_size\n    assert len(shape) == 4\n    return action_tokens[:, :, :, :self.token_embedding_size]\n  def fake_transformer(\n      self, all_tokens, training,\n      attention_mask) -> Union[tf.Tensor, Tuple[tf.Tensor, list[tf.Tensor]]]:\n    \"\"\"Fakes the call to TransformerNetwork._transformer.\"\"\"\n    del training\n    del attention_mask\n    # We expect ST00 ST01 A00 A01...\n    # Where:\n    # * ST01 is token 1 of state 0.\n    # * A01 is token 1 of action 0.\n    shape = all_tokens.shape.as_list()\n    batch_size = shape[0]\n    self.assertEqual(batch_size, 1)\n    emb_size = self.token_embedding_size\n    # transform to [batch_size, num_tokens, token_size]\n    all_tokens = tf.reshape(all_tokens, [batch_size, -1, emb_size])",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:307-335"
+    },
+    "361": {
+        "file_id": 26,
+        "content": "This function takes a list of tokens, determines the batch size and token embedding size, reshapes the tokens to match the expected input format for the TransformerNetwork's _transformer() method, then returns the reshaped tokens. It also includes assertions for the vocabulary size and shape of the input tensor.",
+        "type": "comment"
+    },
+    "362": {
+        "file_id": 26,
+        "content": "    # Pads tokens to be of vocab_size.\n    self.assertGreater(self.vocab_size, self.token_embedding_size)\n    all_shape = all_tokens.shape\n    self.assertLen(all_shape.as_list(), 3)\n    output_tokens = tf.concat([\n        all_tokens,\n        tf.zeros([\n            all_shape[0], all_shape[1],\n            self.vocab_size - self.token_embedding_size\n        ])\n    ],\n                              axis=-1)\n    num_tokens_per_step = NUM_IMAGE_TOKENS + self._num_action_tokens\n    # Check state/action alignment.\n    window_range = min(self._step_idx + 1, self.time_sequence_length)\n    for j in range(window_range):\n      # The index step that is stored in j = 0.\n      first_step_idx = max(0, self._step_idx + 1 - self.time_sequence_length)\n      image_idx = j * num_tokens_per_step\n      action_start_index = image_idx + NUM_IMAGE_TOKENS\n      for t in range(NUM_IMAGE_TOKENS):\n        self.assertAllEqual(\n            self.get_image_value(first_step_idx + j) *\n            tf.ones_like(all_tokens[0][image_idx][:self.token_embedding_size]),",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:336-359"
+    },
+    "363": {
+        "file_id": 26,
+        "content": "This code sets up a test environment for the transformer network, pads tokens to be of vocab_size, checks state/action alignment, and verifies if the index step is stored correctly. It uses tf.concat to concatenate zero-padded tokens, calculates action start index based on image and action token counts, and performs equality checks using get_image_value and tf.ones_like functions.",
+        "type": "comment"
+    },
+    "364": {
+        "file_id": 26,
+        "content": "            all_tokens[0][image_idx + t][:self.token_embedding_size])\n      # if j is not the current step in the window, all action dimensions\n      # from previous steps are already infered and thus can be checked.\n      action_dims_range = self.action_inf_idx if j == window_range - 1 else self._num_action_tokens\n      for t in range(action_dims_range):\n        token_idx = action_start_index + t\n        action_value = (first_step_idx + j) * self._num_action_tokens + t\n        self.assertAllEqual(\n            self.get_action_logits(\n                batch_size=batch_size,\n                value=action_value,\n                vocab_size=self.vocab_size)[0][0][:self.token_embedding_size],\n            all_tokens[0][token_idx][:self.token_embedding_size])\n    # Output the right action dimension value.\n    image_token_index = (\n        min(self._step_idx, self.time_sequence_length - 1) *\n        num_tokens_per_step)\n    transformer_shift = -1\n    action_index = (\n        image_token_index + NUM_IMAGE_TOKENS + self.action_inf_idx +",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:360-379"
+    },
+    "365": {
+        "file_id": 26,
+        "content": "This code tests the transformer network's output by comparing the logits of action dimensions against expected values. It asserts that the logits for certain actions match the expected token embeddings, ensuring correct prediction and understanding.",
+        "type": "comment"
+    },
+    "366": {
+        "file_id": 26,
+        "content": "        transformer_shift)\n    action_value = self._step_idx * self._num_action_tokens + self.action_inf_idx\n    action_logits = self.get_action_logits(\n        batch_size=batch_size, value=action_value, vocab_size=self.vocab_size)\n    output_tokens = tf.concat([\n        output_tokens[:, :action_index, :], action_logits[:, :, :],\n        output_tokens[:, action_index + 1:, :]\n    ],\n                              axis=1)\n    self.action_inf_idx = (self.action_inf_idx + 1) % self._num_action_tokens\n    attention_scores = []\n    return output_tokens, attention_scores",
+        "type": "code",
+        "location": "/transformer_network_test_set_up.py:380-391"
+    },
+    "367": {
+        "file_id": 26,
+        "content": "This code is updating the output tokens by inserting action logits at a specific index, then concatenates the updated output tokens. The function also increments the action_inf_idx and initializes an empty list for attention scores. Finally, it returns the updated output tokens and the attention scores list.",
+        "type": "comment"
+    },
+    "368": {
+        "file_id": 27,
+        "content": "/transformer_test.py",
+        "type": "filepath"
+    },
+    "369": {
+        "file_id": 27,
+        "content": "This code tests the transformer model in robotics_transformer library using a TransformerTest class. It defines a forward pass test function with parameters for attention scores, checking input/output shapes and attention scores as required.",
+        "type": "summary"
+    },
+    "370": {
+        "file_id": 27,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for transformer.\"\"\"\nfrom absl.testing import parameterized\nfrom robotics_transformer import transformer\nimport tensorflow as tf\nclass TransformerTest(parameterized.TestCase):\n  def setUp(self):\n    self._vocab_size = 10\n    batch_size = 8\n    sequence_len = 12\n    self._tokens = tf.random.uniform(\n        [batch_size, sequence_len, self._vocab_size],\n        minval=0,\n        maxval=1,\n        dtype=tf.dtypes.float32,\n    )\n    super(TransformerTest, self).setUp()",
+        "type": "code",
+        "location": "/transformer_test.py:1-32"
+    },
+    "371": {
+        "file_id": 27,
+        "content": "This code is for testing the transformer model in the robotics_transformer library. It imports necessary modules, sets up variables like vocab size and creates a random input tensor. The class TransformerTest extends parameterized.TestCase for running tests with different parameters.",
+        "type": "comment"
+    },
+    "372": {
+        "file_id": 27,
+        "content": "  @parameterized.parameters(True, False)\n  def test_transformer_forwardpass(self, return_attention_scores):\n    network = transformer.Transformer(\n        num_layers=2,\n        layer_size=512,\n        num_heads=4,\n        feed_forward_size=256,\n        dropout_rate=0.1,\n        vocab_size=self._vocab_size,\n        return_attention_scores=return_attention_scores)\n    output_tokens, attention_scores = network(self._tokens, attention_mask=None)\n    self.assertSequenceEqual(self._tokens.shape.as_list(),\n                             output_tokens.shape.as_list())\n    if return_attention_scores:\n      self.assertNotEmpty(attention_scores)\n    else:\n      self.assertEmpty(attention_scores)\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/transformer_test.py:34-55"
+    },
+    "373": {
+        "file_id": 27,
+        "content": "This code defines a test function for the forward pass of a Transformer model. It takes a boolean parameter to determine if attention scores should be returned. The test asserts the shape of input and output tokens, and checks if attention scores are returned based on the parameter value.",
+        "type": "comment"
+    }
+}

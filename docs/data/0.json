@@ -1,0 +1,543 @@
+{
+    "0": {
+        "file_id": 0,
+        "content": "/README.md",
+        "type": "filepath"
+    },
+    "1": {
+        "file_id": 0,
+        "content": "The code is for the Robotics Transformer (RT-1) library, featuring an efficient net image tokenizer backbone and transformer model for robotic control. Trained on 700 tasks and jointly trained on EDR and Kuka data, instructions and checkpoints are provided in TensorFlow format. It's licensed under Apache.",
+        "type": "summary"
+    },
+    "2": {
+        "file_id": 0,
+        "content": "# Robotics Transformer\n*This is not an officially supported Google product.*\nThis repository is a collection code files and artifacts for running\nRobotics Transformer or RT-1.\n## Features\n* Film efficient net based image tokenizer backbone\n* Token learner based compression of input tokens\n* Transformer for end to end robotic control\n* Testing utilities\n## Getting Started\n### Installation\nClone the repo\n```bash\ngit clone https://github.com/google-research/robotics_transformer.git\npip install -r robotics_transformer/requirements.txt\npython -m robotics_transformer.tokenizers.action_tokenizer.test\n```\n### Running Tests\nTo run RT-1 tests, you can clone the git repo and run\n[bazel](https://bazel.build/):\n```bash\ngit clone https://github.com/google_research/robotics_transformer.git\ncd robotics_transformer\nbazel test ...\n```\n### Using trained checkpoints\nCheckpoints are included in trained_checkpoints/ folder for three models:\n1. [RT-1 trained on 700 tasks](trained_checkpoints/rt1main)\n2. [RT-1 jointly trained on EDR and Kuka data](trained_checkpoints/rt1multirobot)",
+        "type": "code",
+        "location": "/README.md:1-40"
+    },
+    "3": {
+        "file_id": 0,
+        "content": "This code is for the Robotics Transformer (RT-1), a collection of files and artifacts for running an efficient net based image tokenizer backbone, transformer for end to end robotic control, and testing utilities. It provides installation instructions, test running guidelines, and uses trained checkpoints for three models: RT-1 trained on 700 tasks, and RT-1 jointly trained on EDR and Kuka data.",
+        "type": "comment"
+    },
+    "4": {
+        "file_id": 0,
+        "content": "3. [RT-1 jointly trained on sim and real data](trained_checkpoints/rt1simreal)\nThey are tensorflow SavedModel files. Instructions on usage can be found [here](https://www.tensorflow.org/guide/saved_model)\n## Future Releases\nThe current repository includes an initial set of libraries for early adoption.\nMore components may come in future releases.\n## License\nThe Robotics Transformer library is licensed under the terms of the Apache\nlicense.",
+        "type": "code",
+        "location": "/README.md:41-54"
+    },
+    "5": {
+        "file_id": 0,
+        "content": "The code provides information about the Robotics Transformer library, specifically mentioning the RT-1 model that has been jointly trained on simulated and real data. The files are TensorFlow SavedModel format, and instructions for their usage can be found at a provided link. Additionally, the repository contains an initial set of libraries for early adoption, with potential addition of more components in future releases. The library is licensed under the Apache license.",
+        "type": "comment"
+    },
+    "6": {
+        "file_id": 1,
+        "content": "/__init__.py",
+        "type": "filepath"
+    },
+    "7": {
+        "file_id": 1,
+        "content": "This code sets the version of the robotics_transformer library to 0.1.0, licensed under Apache License 2.0, and mentions that a new PyPI release will be created whenever the version is changed.",
+        "type": "summary"
+    },
+    "8": {
+        "file_id": 1,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"robotics_transformer API.\"\"\"\n# A new PyPI release will be pushed everytime `__version__` is increased\n# When changing this, also update the CHANGELOG.md\n__version__ = '0.1.0'",
+        "type": "code",
+        "location": "/__init__.py:1-18"
+    },
+    "9": {
+        "file_id": 1,
+        "content": "This code sets the version of the robotics_transformer library to 0.1.0, licensed under Apache License 2.0, and mentions that a new PyPI release will be created whenever the version is changed.",
+        "type": "comment"
+    },
+    "10": {
+        "file_id": 2,
+        "content": "/configs/transformer_mixin.gin",
+        "type": "filepath"
+    },
+    "11": {
+        "file_id": 2,
+        "content": "The code configures a TransformerNetwork for an actor-critic model in robotics. It uses Adam optimizer with a learning rate of 0.0001, has 8 layers with 128 neurons each and 8 attention heads. The time sequence length is set to SEQUENCE_LENGTH, and the model uses token embedding with size 512. Additionally, it utilizes an image tokenizer, and a specified crop size and action order are used.",
+        "type": "summary"
+    },
+    "12": {
+        "file_id": 2,
+        "content": "from __gin__ import dynamic_registration\nfrom robotics_transformer import transformer_network\nfrom robotics_transformer.tokenizers import image_tokenizer\nimport tensorflow as tf\nLEARNING_RATE_ACTOR = 0.0001\nSEQUENCE_LENGTH = 6\ntransformer_network.TransformerNetwork:\n  num_layers = 8\n  layer_size = 128\n  num_heads = 8\n  feed_forward_size = 512\n  dropout_rate = 0.1\n  vocab_size = 256\n  token_embedding_size = 512\n  time_sequence_length = %SEQUENCE_LENGTH\n  crop_size = %CROP_SIZE\n  action_order = %ACTION_ORDER\n  use_token_learner = True\nactor_optimizer/tf.keras.optimizers.Adam:\n  learning_rate = %LEARNING_RATE_ACTOR\nACTOR_NETWORK = @transformer_network.TransformerNetwork\nACTOR_OPTIMIZER = @actor_optimizer/tf.keras.optimizers.Adam()",
+        "type": "code",
+        "location": "/configs/transformer_mixin.gin:1-27"
+    },
+    "13": {
+        "file_id": 2,
+        "content": "The code configures a TransformerNetwork for an actor-critic model in robotics. It uses Adam optimizer with a learning rate of 0.0001, has 8 layers with 128 neurons each and 8 attention heads. The time sequence length is set to SEQUENCE_LENGTH, and the model uses token embedding with size 512. Additionally, it utilizes an image tokenizer, and a specified crop size and action order are used.",
+        "type": "comment"
+    },
+    "14": {
+        "file_id": 3,
+        "content": "/film_efficientnet/__init__.py",
+        "type": "filepath"
+    },
+    "15": {
+        "file_id": 3,
+        "content": "This code block is a license notice, specifying the copyright holder and license terms for the file. It references the Apache License, Version 2.0, which governs usage of this code.",
+        "type": "summary"
+    },
+    "16": {
+        "file_id": 3,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.",
+        "type": "code",
+        "location": "/film_efficientnet/__init__.py:1-13"
+    },
+    "17": {
+        "file_id": 3,
+        "content": "This code block is a license notice, specifying the copyright holder and license terms for the file. It references the Apache License, Version 2.0, which governs usage of this code.",
+        "type": "comment"
+    },
+    "18": {
+        "file_id": 4,
+        "content": "/film_efficientnet/film_conditioning_layer.py",
+        "type": "filepath"
+    },
+    "19": {
+        "file_id": 4,
+        "content": "The FilmConditioning layer is a deep learning implementation of FiLM conditioning technique for image processing, utilizing two dense layers and convolutional filters with conditioning tensor inputs.",
+        "type": "summary"
+    },
+    "20": {
+        "file_id": 4,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"ResNet variants model for Keras with Film-Conditioning.\nRelated papers/blogs:\n- https://arxiv.org/abs/1512.03385\n- https://arxiv.org/pdf/1603.05027v2.pdf\n- http://torch.ch/blog/2016/02/04/resnets.html\n- https://arxiv.org/abs/1709.07871\n\"\"\"\nimport tensorflow.compat.v2 as tf\nlayers = tf.keras.layers\nclass FilmConditioning(tf.keras.layers.Layer):\n  \"\"\"Layer that adds FiLM conditioning.\n  This is intended to be applied after a convolutional layer. It will learn a",
+        "type": "code",
+        "location": "/film_efficientnet/film_conditioning_layer.py:1-30"
+    },
+    "21": {
+        "file_id": 4,
+        "content": "This code defines a FilmConditioning layer that can be applied after a convolutional layer to learn FiLM conditioning, which is an image processing technique used in deep learning models. The class inherits from tf.keras.layers.Layer and contains the implementation of this technique.",
+        "type": "comment"
+    },
+    "22": {
+        "file_id": 4,
+        "content": "  multiplicative and an additive factor to be applied to each channel of the\n  convolution's output.\n  Conv layer can be rank 2 or 4.\n  For further details, see: https://arxiv.org/abs/1709.07871\n  \"\"\"\n  def __init__(self, num_channels: int):\n    \"\"\"Constructs a FiLM conditioning layer.\n    Args:\n      num_channels: Number of filter channels to expect in the input.\n    \"\"\"\n    super().__init__()\n    # Note that we initialize with zeros because empirically we have found\n    # this works better than initializing with glorot.\n    self._projection_add = layers.Dense(\n        num_channels,\n        activation=None,\n        kernel_initializer='zeros',\n        bias_initializer='zeros')\n    self._projection_mult = layers.Dense(\n        num_channels,\n        activation=None,\n        kernel_initializer='zeros',\n        bias_initializer='zeros')\n  def call(self, conv_filters: tf.Tensor, conditioning: tf.Tensor):\n    tf.debugging.assert_rank(conditioning, 2)\n    projected_cond_add = self._projection_add(conditioning)\n    projected_cond_mult = self._projection_mult(conditioning)",
+        "type": "code",
+        "location": "/film_efficientnet/film_conditioning_layer.py:31-62"
+    },
+    "23": {
+        "file_id": 4,
+        "content": "FiLM conditioning layer with two dense layers for additive and multiplicative channel factors. Initializes weights to zero for better performance. Expects convolution filters and conditioning tensor as input.",
+        "type": "comment"
+    },
+    "24": {
+        "file_id": 4,
+        "content": "    if len(conv_filters.shape) == 4:\n      # [B, D] -> [B, 1, 1, D]\n      projected_cond_add = projected_cond_add[:, tf.newaxis, tf.newaxis]\n      projected_cond_mult = projected_cond_mult[:, tf.newaxis, tf.newaxis]\n    else:\n      tf.debugging.assert_rank(conv_filters, 2)\n    # Original FiLM paper argues that 1 + gamma centers the initialization at\n    # identity transform.\n    result = (1 + projected_cond_mult) * conv_filters + projected_cond_add\n    return result",
+        "type": "code",
+        "location": "/film_efficientnet/film_conditioning_layer.py:64-74"
+    },
+    "25": {
+        "file_id": 4,
+        "content": "This code conditionally shapes the projected conditions and applies FiLM transformations to the convolutional filters, ensuring the initialization is centered at the identity transform.",
+        "type": "comment"
+    },
+    "26": {
+        "file_id": 5,
+        "content": "/film_efficientnet/film_conditioning_layer_test.py",
+        "type": "filepath"
+    },
+    "27": {
+        "file_id": 5,
+        "content": "This code tests the FilmConditioningLayer class from robotics_transformer library's film_efficientnet module, applying it to random convolution and context inputs and ensuring output rank matches expectation. Licensed under Apache License v2.0.",
+        "type": "summary"
+    },
+    "28": {
+        "file_id": 5,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for film_conditioning_layer.\"\"\"\nfrom absl.testing import parameterized\nimport numpy as np\nfrom robotics_transformer.film_efficientnet import film_conditioning_layer\nimport tensorflow as tf\nclass FilmConditioningLayerTest(tf.test.TestCase, parameterized.TestCase):\n  @parameterized.parameters([2, 4])\n  def test_film_conditioning_rank_two_and_four(self, conv_rank):\n    batch = 2\n    num_channels = 3\n    if conv_rank == 2:\n      conv_layer = np.random.randn(batch, num_channels)",
+        "type": "code",
+        "location": "/film_efficientnet/film_conditioning_layer_test.py:1-28"
+    },
+    "29": {
+        "file_id": 5,
+        "content": "This code is a test case for the FilmConditioningLayer class. It tests the behavior of the layer for different ranks (2D and 4D) by generating random data, setting batch size, and number of channels. The class is part of the robotics_transformer library's film_efficientnet module, which is licensed under Apache License v2.0.",
+        "type": "comment"
+    },
+    "30": {
+        "file_id": 5,
+        "content": "    elif conv_rank == 4:\n      conv_layer = np.random.randn(batch, 1, 1, num_channels)\n    else:\n      raise ValueError(f'Unexpected conv rank: {conv_rank}')\n    context = np.random.rand(batch, num_channels)\n    film_layer = film_conditioning_layer.FilmConditioning(num_channels)\n    out = film_layer(conv_layer, context)\n    tf.debugging.assert_rank(out, conv_rank)\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/film_efficientnet/film_conditioning_layer_test.py:29-40"
+    },
+    "31": {
+        "file_id": 5,
+        "content": "The code initializes a random convolutional layer and context, creates an instance of FilmConditioningLayer, applies the layer to the convolution and context inputs, and asserts the rank of the output matches the expected rank.",
+        "type": "comment"
+    },
+    "32": {
+        "file_id": 6,
+        "content": "/film_efficientnet/film_efficientnet_encoder.py",
+        "type": "filepath"
+    },
+    "33": {
+        "file_id": 6,
+        "content": "The code utilizes EfficientNet models in Keras for image classification tasks, providing custom architecture options and preprocessing using the film_efficientnet library.",
+        "type": "summary"
+    },
+    "34": {
+        "file_id": 6,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n# pytype: skip-file\n# pylint: skip-file\n\"\"\"EfficientNet models modified with added film layers.\nMostly copied from third_party/py/keras/applications/efficientnet.py\n\"\"\"\nimport copy\nimport math\nimport os\nimport warnings\nimport json\nfrom absl import logging\nimport tensorflow.compat.v2 as tf\nfrom tensorflow.keras import layers\nfrom robotics_transformer.film_efficientnet.film_conditioning_layer import FilmConditioning\nBASE_WEIGHTS_PATH = 'efficientnet_checkpoints/efficientnet'",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:1-34"
+    },
+    "35": {
+        "file_id": 6,
+        "content": "This code is a part of EfficientNet models with added film layers, copied from the original efficientnet.py file. It includes copyright and license information, skips file checks, and imports necessary modules. BASE_WEIGHTS_PATH points to the directory for EfficientNet checkpoints.",
+        "type": "comment"
+    },
+    "36": {
+        "file_id": 6,
+        "content": "IMAGENET_JSON_PATH = 'efficientnet_checkpoints/imagenet_classes.json'\nCLASS_INDEX = None\nWEIGHTS_PATHS = {\n    'efficientnetb3': BASE_WEIGHTS_PATH + 'b3.h5',\n    'efficientnetb3_notop': BASE_WEIGHTS_PATH + 'b3_notop.h5',\n}\nDEFAULT_BLOCKS_ARGS = [{\n    'kernel_size': 3,\n    'repeats': 1,\n    'filters_in': 32,\n    'filters_out': 16,\n    'expand_ratio': 1,\n    'id_skip': True,\n    'strides': 1,\n    'se_ratio': 0.25\n}, {\n    'kernel_size': 3,\n    'repeats': 2,\n    'filters_in': 16,\n    'filters_out': 24,\n    'expand_ratio': 6,\n    'id_skip': True,\n    'strides': 2,\n    'se_ratio': 0.25\n}, {\n    'kernel_size': 5,\n    'repeats': 2,\n    'filters_in': 24,\n    'filters_out': 40,\n    'expand_ratio': 6,\n    'id_skip': True,\n    'strides': 2,\n    'se_ratio': 0.25\n}, {\n    'kernel_size': 3,\n    'repeats': 3,\n    'filters_in': 40,\n    'filters_out': 80,\n    'expand_ratio': 6,\n    'id_skip': True,\n    'strides': 2,\n    'se_ratio': 0.25\n}, {\n    'kernel_size': 5,\n    'repeats': 3,\n    'filters_in': 80,\n    'filters_out': 112,\n    'expand_ratio': 6,",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:35-84"
+    },
+    "37": {
+        "file_id": 6,
+        "content": "The code defines the path to the Imagenet classes JSON file, dictionary of weights paths for different models, and default block arguments for the EfficientNet model's encoder.",
+        "type": "comment"
+    },
+    "38": {
+        "file_id": 6,
+        "content": "    'id_skip': True,\n    'strides': 1,\n    'se_ratio': 0.25\n}, {\n    'kernel_size': 5,\n    'repeats': 4,\n    'filters_in': 112,\n    'filters_out': 192,\n    'expand_ratio': 6,\n    'id_skip': True,\n    'strides': 2,\n    'se_ratio': 0.25\n}, {\n    'kernel_size': 3,\n    'repeats': 1,\n    'filters_in': 192,\n    'filters_out': 320,\n    'expand_ratio': 6,\n    'id_skip': True,\n    'strides': 1,\n    'se_ratio': 0.25\n}]\nCONV_KERNEL_INITIALIZER = {\n    'class_name': 'VarianceScaling',\n    'config': {\n        'scale': 2.0,\n        'mode': 'fan_out',\n        'distribution': 'truncated_normal'\n    }\n}\nDENSE_KERNEL_INITIALIZER = {\n    'class_name': 'VarianceScaling',\n    'config': {\n        'scale': 1. / 3.,\n        'mode': 'fan_out',\n        'distribution': 'uniform'\n    }\n}\nBASE_DOCSTRING = \"\"\"Instantiates the {name} architecture.\n  Reference:\n  - [EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks](\n      https://arxiv.org/abs/1905.11946) (ICML 2019)\n  This function returns a Keras image classification model,\n  optionally loaded with weights pre-trained on ImageNet.",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:85-133"
+    },
+    "39": {
+        "file_id": 6,
+        "content": "This code defines a model architecture for EfficientNet in Keras. It consists of multiple convolutional layers with different parameters like kernel size, filters, and stride. The CONV_KERNEL_INITIALIZER and DENSE_KERNEL_INITIALIZER are initializers used for the convolution and dense layers respectively. The BASE_DOCSTRING provides information about the architecture and its source.",
+        "type": "comment"
+    },
+    "40": {
+        "file_id": 6,
+        "content": "  For image classification use cases, see\n  [this page for detailed examples](\n    https://keras.io/api/applications/#usage-examples-for-image-classification-models).\n  For transfer learning use cases, make sure to read the\n  [guide to transfer learning & fine-tuning](\n    https://keras.io/guides/transfer_learning/).\n  Note: each Keras Application expects a specific kind of input preprocessing.\n  For EfficientNet, input preprocessing is included as part of the model\n  (as a `Rescaling` layer), and thus\n  `tf.keras.applications.efficientnet.preprocess_input` is actually a\n  pass-through function. EfficientNet models expect their inputs to be float\n  tensors of pixels with values in the [0-255] range.\n  Args:\n    include_top: Whether to include the fully-connected\n        layer at the top of the network. Defaults to True.\n    weights: One of `None` (random initialization),\n          'imagenet' (pre-training on ImageNet),\n          or the path to the weights file to be loaded. Defaults to 'imagenet'.\n    input_tensor: Optional Keras tensor",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:135-156"
+    },
+    "41": {
+        "file_id": 6,
+        "content": "The code snippet provides information about the usage of EfficientNet for image classification and transfer learning, specifying that it includes input preprocessing as part of the model. It also notes that EfficientNet models expect inputs in the [0-255] range as float tensors. The code accepts arguments for including the fully-connected layer at the top and loading specific weights.",
+        "type": "comment"
+    },
+    "42": {
+        "file_id": 6,
+        "content": "        (i.e. output of `layers.Input()`)\n        to use as image input for the model.\n    input_shape: Optional shape tuple, only to be specified\n        if `include_top` is False.\n        It should have exactly 3 inputs channels.\n    pooling: Optional pooling mode for feature extraction\n        when `include_top` is `False`. Defaults to None.\n        - `None` means that the output of the model will be\n            the 4D tensor output of the\n            last convolutional layer.\n        - `avg` means that global average pooling\n            will be applied to the output of the\n            last convolutional layer, and thus\n            the output of the model will be a 2D tensor.\n        - `max` means that global max pooling will\n            be applied.\n    classes: Optional number of classes to classify images\n        into, only to be specified if `include_top` is True, and\n        if no `weights` argument is specified. Defaults to 1000 (number of\n        ImageNet classes).\n    classifier_activation: A `str` or callable. The activation function to use",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:157-177"
+    },
+    "43": {
+        "file_id": 6,
+        "content": "This code snippet is a part of EfficientNet model's encoder in film_efficientnet library. It defines the input parameters for creating an EfficientNet model instance, including shape, pooling mode (None, avg or max), and number of classes to classify. The input shape should have exactly 3 input channels, and the model output depends on the specified pooling mode.",
+        "type": "comment"
+    },
+    "44": {
+        "file_id": 6,
+        "content": "        on the \"top\" layer. Ignored unless `include_top=True`. Set\n        `classifier_activation=None` to return the logits of the \"top\" layer.\n        Defaults to 'softmax'.\n        When loading pretrained weights, `classifier_activation` can only\n        be `None` or `\"softmax\"`.\n  Returns:\n    A `keras.Model` instance.\n\"\"\"\nIMAGENET_STDDEV_RGB = [0.229, 0.224, 0.225]\ndef validate_activation(classifier_activation, weights):\n  \"\"\"validates that the classifier is compatible with the weights.\n  Args:\n    classifier_activation: str or callable activation function\n    weights: The pretrained weights to load.\n  Raises:\n    ValueError: if an activation other than `None` or `softmax` are used with\n      pretrained weights.\n  \"\"\"\n  if weights is None:\n    return\n  classifier_activation = tf.keras.activations.get(classifier_activation)\n  if classifier_activation not in {\n      tf.keras.activations.get('softmax'),\n      tf.keras.activations.get(None)\n  }:\n    raise ValueError('Only `None` and `softmax` activations are allowed '",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:178-210"
+    },
+    "45": {
+        "file_id": 6,
+        "content": "This function is used to validate the classifier's activation and compatibility with pretrained weights. If no weights are provided, it returns without raising any issues. The function checks if the classifier activation is either 'softmax' or None, and raises a ValueError if an incompatible activation function is used with pretrained weights.",
+        "type": "comment"
+    },
+    "46": {
+        "file_id": 6,
+        "content": "                     'for the `classifier_activation` argument when using '\n                     'pretrained weights, with `include_top=True`; Received: '\n                     f'classifier_activation={classifier_activation}')\ndef correct_pad(inputs, kernel_size):\n  \"\"\"Returns a tuple for zero-padding for 2D convolution with downsampling.\n  Args:\n    inputs: Input tensor.\n    kernel_size: An integer or tuple/list of 2 integers.\n  Returns:\n    A tuple.\n  \"\"\"\n  img_dim = 2 if tf.keras.backend.image_data_format() == 'channels_first' else 1\n  input_size = tf.keras.backend.int_shape(inputs)[img_dim:(img_dim + 2)]\n  if isinstance(kernel_size, int):\n    kernel_size = (kernel_size, kernel_size)\n  if input_size[0] is None:\n    adjust = (1, 1)\n  else:\n    adjust = (1 - input_size[0] % 2, 1 - input_size[1] % 2)\n  correct = (kernel_size[0] // 2, kernel_size[1] // 2)\n  return ((correct[0] - adjust[0], correct[0]), (correct[1] - adjust[1],\n                                                 correct[1]))\ndef obtain_input_shape(input_shape,",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:211-239"
+    },
+    "47": {
+        "file_id": 6,
+        "content": "The code contains a function 'correct_pad' that returns the padding for 2D convolution with downsampling. It takes inputs and kernel size as arguments and returns a tuple of the correct padding. The function also checks if input size is None or not, adjusts the padding accordingly, and calculates the final padding values. The 'obtain_input_shape' function takes an input shape and calls the 'correct_pad' function to obtain the input shape for 2D convolution.",
+        "type": "comment"
+    },
+    "48": {
+        "file_id": 6,
+        "content": "                       default_size,\n                       min_size,\n                       data_format,\n                       require_flatten,\n                       weights=None):\n  \"\"\"Internal utility to compute/validate a model's input shape.\n  Args:\n    input_shape: Either None (will return the default network input shape), or a\n      user-provided shape to be validated.\n    default_size: Default input width/height for the model.\n    min_size: Minimum input width/height accepted by the model.\n    data_format: Image data format to use.\n    require_flatten: Whether the model is expected to be linked to a classifier\n      via a Flatten layer.\n    weights: One of `None` (random initialization) or 'imagenet' (pre-training\n      on ImageNet). If weights='imagenet' input channels must be equal to 3.\n  Returns:\n    An integer shape tuple (may include None entries).\n  Raises:\n    ValueError: In case of invalid argument values.\n  \"\"\"\n  if weights != 'imagenet' and input_shape and len(input_shape) == 3:\n    if data_format == 'channels_first':",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:240-265"
+    },
+    "49": {
+        "file_id": 6,
+        "content": "This code defines a utility function to compute or validate the input shape of a model. It takes in arguments like input_shape, default_size, min_size, data_format, require_flatten, and weights. The function returns an integer shape tuple and raises ValueError for invalid argument values. If weights is 'imagenet', it checks if input channels are equal to 3.",
+        "type": "comment"
+    },
+    "50": {
+        "file_id": 6,
+        "content": "      if input_shape[0] not in {1, 3}:\n        warnings.warn(\n            'This model usually expects 1 or 3 input channels. '\n            'However, it was passed an input_shape with ' +\n            str(input_shape[0]) + ' input channels.',\n            stacklevel=2)\n      default_shape = (input_shape[0], default_size, default_size)\n    else:\n      if input_shape[-1] not in {1, 3}:\n        warnings.warn(\n            'This model usually expects 1 or 3 input channels. '\n            'However, it was passed an input_shape with ' +\n            str(input_shape[-1]) + ' input channels.',\n            stacklevel=2)\n      default_shape = (default_size, default_size, input_shape[-1])\n  else:\n    if data_format == 'channels_first':\n      default_shape = (3, default_size, default_size)\n    else:\n      default_shape = (default_size, default_size, 3)\n  if weights == 'imagenet' and require_flatten:\n    if input_shape is not None:\n      if input_shape != default_shape:\n        raise ValueError('When setting `include_top=True` '",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:266-289"
+    },
+    "51": {
+        "file_id": 6,
+        "content": "The code checks if the input shape contains 1 or 3 channels for both the first and last dimensions. If not, it raises a warning. It then assigns a default shape based on whether the data format is 'channels_first' or 'channels_last'. Finally, it checks if weights are set to 'imagenet' and requires flattening. If so, it raises an error if the input shape does not match the expected default shape.",
+        "type": "comment"
+    },
+    "52": {
+        "file_id": 6,
+        "content": "                         'and loading `imagenet` weights, '\n                         f'`input_shape` should be {default_shape}.  '\n                         f'Received: input_shape={input_shape}')\n    return default_shape\n  if input_shape:\n    if data_format == 'channels_first':\n      if input_shape is not None:\n        if len(input_shape) != 3:\n          raise ValueError('`input_shape` must be a tuple of three integers.')\n        if input_shape[0] != 3 and weights == 'imagenet':\n          raise ValueError('The input must have 3 channels; Received '\n                           f'`input_shape={input_shape}`')\n        if ((input_shape[1] is not None and input_shape[1] < min_size) or\n            (input_shape[2] is not None and input_shape[2] < min_size)):\n          raise ValueError(f'Input size must be at least {min_size}'\n                           f'x{min_size}; Received: '\n                           f'input_shape={input_shape}')\n    else:\n      if input_shape is not None:\n        if len(input_shape) != 3:\n          raise ValueError('`input_shape` must be a tuple of three integers.')",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:290-310"
+    },
+    "53": {
+        "file_id": 6,
+        "content": "This code raises a ValueError if the input shape is not correct. If 'imagenet' weights are loaded, default input shape is used, and it expects three channels. If input shape has less than three channels, or its width/height is less than min_size, then a ValueError is raised.",
+        "type": "comment"
+    },
+    "54": {
+        "file_id": 6,
+        "content": "        if input_shape[-1] != 3 and weights == 'imagenet':\n          raise ValueError('The input must have 3 channels; Received '\n                           f'`input_shape={input_shape}`')\n        if ((input_shape[0] is not None and input_shape[0] < min_size) or\n            (input_shape[1] is not None and input_shape[1] < min_size)):\n          raise ValueError('Input size must be at least '\n                           f'{min_size}x{min_size}; Received: '\n                           f'input_shape={input_shape}')\n  else:\n    if require_flatten:\n      input_shape = default_shape\n    else:\n      if data_format == 'channels_first':\n        input_shape = (3, None, None)\n      else:\n        input_shape = (None, None, 3)\n  if require_flatten:\n    if None in input_shape:\n      raise ValueError('If `include_top` is True, '\n                       'you should specify a static `input_shape`. '\n                       f'Received: input_shape={input_shape}')\n  return input_shape\ndef EfficientNet(width_coefficient,\n                 depth_coefficient,",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:311-336"
+    },
+    "55": {
+        "file_id": 6,
+        "content": "The code checks if the input shape has 3 channels and is at least the minimum size. If not, it raises a ValueError. If 'include_top' is True, it requires a static input shape. It returns the adjusted input shape based on data format and whether flattening is required.",
+        "type": "comment"
+    },
+    "56": {
+        "file_id": 6,
+        "content": "                 default_size,\n                 dropout_rate=0.2,\n                 drop_connect_rate=0.2,\n                 depth_divisor=8,\n                 activation='swish',\n                 blocks_args='default',\n                 model_name='efficientnet',\n                 include_top=True,\n                 weights='imagenet',\n                 input_tensor=None,\n                 input_shape=None,\n                 pooling=None,\n                 classes=1000,\n                 classifier_activation='softmax',\n                 include_film=False):\n  \"\"\"Instantiates the EfficientNet architecture using given scaling coefficients.\n  Args:\n    width_coefficient: float, scaling coefficient for network width.\n    depth_coefficient: float, scaling coefficient for network depth.\n    default_size: integer, default input image size.\n    dropout_rate: float, dropout rate before final classifier layer.\n    drop_connect_rate: float, dropout rate at skip connections.\n    depth_divisor: integer, a unit of network width.\n    activation: activation function.",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:337-361"
+    },
+    "57": {
+        "file_id": 6,
+        "content": "This code is defining a function that instantiates an EfficientNet architecture using given scaling coefficients. It takes arguments for width and depth coefficient, default input image size, dropout rate, and other parameters to customize the network's structure. The function returns an instance of the EfficientNet model.",
+        "type": "comment"
+    },
+    "58": {
+        "file_id": 6,
+        "content": "    blocks_args: list of dicts, parameters to construct block modules.\n    model_name: string, model name.\n    include_top: whether to include the fully-connected layer at the top of the\n      network.\n    weights: one of `None` (random initialization), 'imagenet' (pre-training on\n      ImageNet), or the path to the weights file to be loaded.\n    input_tensor: optional Keras tensor (i.e. output of `layers.Input()`) to use\n      as image input for the model.\n    input_shape: optional shape tuple, only to be specified if `include_top` is\n      False. It should have exactly 3 inputs channels.\n    pooling: optional pooling mode for feature extraction when `include_top` is\n      `False`. - `None` means that the output of the model will be the 4D tensor\n      output of the last convolutional layer. - `avg` means that global average\n      pooling will be applied to the output of the last convolutional layer, and\n      thus the output of the model will be a 2D tensor. - `max` means that\n      global max pooling will be applied.",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:362-377"
+    },
+    "59": {
+        "file_id": 6,
+        "content": "This function takes in parameters for constructing blocks, model name, inclusion of top layers, weights to be used, input tensor, input shape and pooling mode, which are then used to create a film efficientnet encoder model.",
+        "type": "comment"
+    },
+    "60": {
+        "file_id": 6,
+        "content": "    classes: optional number of classes to classify images into, only to be\n      specified if `include_top` is True, and if no `weights` argument is\n      specified.\n    classifier_activation: A `str` or callable. The activation function to use\n      on the \"top\" layer. Ignored unless `include_top=True`. Set\n      `classifier_activation=None` to return the logits of the \"top\" layer.\n    include_film: bool, whether or not to insert film conditioning layers.\n  Returns:\n    A `keras.Model` instance.\n  Raises:\n    ValueError: in case of invalid argument for `weights`,\n      or invalid input shape.\n    ValueError: if `classifier_activation` is not `softmax` or `None` when\n      using a pretrained top layer.\n  \"\"\"\n  if blocks_args == 'default':\n    blocks_args = DEFAULT_BLOCKS_ARGS\n  if not (weights in {'imagenet', None} or tf.io.gfile.exists(weights)):\n    raise ValueError('The `weights` argument should be either '\n                     '`None` (random initialization), `imagenet` '\n                     '(pre-training on ImageNet), '",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:378-401"
+    },
+    "61": {
+        "file_id": 6,
+        "content": "This code defines a model using EfficientNet as the encoder and allows for optional classification into a specific number of classes. It includes an option to insert film conditioning layers, and can be initialized with random values or pre-trained on ImageNet. The classifier activation function can also be specified.",
+        "type": "comment"
+    },
+    "62": {
+        "file_id": 6,
+        "content": "                     'or the path to the weights file to be loaded.')\n  if weights == 'imagenet' and include_top and classes != 1000:\n    raise ValueError('If using `weights` as `\"imagenet\"` with `include_top`'\n                     ' as true, `classes` should be 1000')\n  # Determine proper input shape\n  input_shape = obtain_input_shape(\n      input_shape,\n      default_size=default_size,\n      min_size=32,\n      data_format=tf.keras.backend.image_data_format(),\n      require_flatten=include_top,\n      weights=weights)\n  if include_film:\n    with tf.compat.v1.variable_scope('context_input'):\n      context_input = layers.Input(shape=512)\n  if input_tensor is None:\n    img_input = layers.Input(shape=input_shape)\n  else:\n    if not tf.keras.backend.is_keras_tensor(input_tensor):\n      img_input = layers.Input(tensor=input_tensor, shape=input_shape)\n    else:\n      img_input = input_tensor\n  bn_axis = 3 if tf.keras.backend.image_data_format() == 'channels_last' else 1\n  def round_filters(filters, divisor=depth_divisor):",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:402-430"
+    },
+    "63": {
+        "file_id": 6,
+        "content": "This code is initializing the EfficientNet model for image classification with optional context input and weights loading. It determines the proper input shape, creates the input layers for image and context data, and defines a function to round the number of filters based on divisor.",
+        "type": "comment"
+    },
+    "64": {
+        "file_id": 6,
+        "content": "    \"\"\"Round number of filters based on depth multiplier.\"\"\"\n    filters *= width_coefficient\n    new_filters = max(divisor, int(filters + divisor / 2) // divisor * divisor)\n    # Make sure that round down does not go down by more than 10%.\n    if new_filters < 0.9 * filters:\n      new_filters += divisor\n    return int(new_filters)\n  def round_repeats(repeats):\n    \"\"\"Round number of repeats based on depth multiplier.\"\"\"\n    return int(math.ceil(depth_coefficient * repeats))\n  # Build stem\n  x = img_input\n  x = layers.Rescaling(1. / 255.)(x)\n  x = layers.Normalization(axis=bn_axis)(x)\n  # Note that the normaliztion layer uses square value of STDDEV as the\n  # variance for the layer: result = (input - mean) / sqrt(var)\n  # However, the original implemenetation uses (input - mean) / var to\n  # normalize the input, we need to divide another sqrt(var) to match the\n  # original implementation.\n  # See https://github.com/tensorflow/tensorflow/issues/49930 for more details\n  # We always apply this transformation, even when not using imagenet weights,",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:431-453"
+    },
+    "65": {
+        "file_id": 6,
+        "content": "The code rounds the number of filters based on a depth multiplier to ensure it doesn't decrease by more than 10%. It also rounds the number of repeats for better efficiency. The code normalizes input data and applies transformation to match the original implementation, even when not using Imagenet weights.",
+        "type": "comment"
+    },
+    "66": {
+        "file_id": 6,
+        "content": "  # because it needs to be in the graph when grafting weights from imagenet\n  # pretrained models.\n  x = layers.Rescaling(1. / tf.math.sqrt(IMAGENET_STDDEV_RGB))(x)\n  x = layers.ZeroPadding2D(padding=correct_pad(x, 3), name='stem_conv_pad')(x)\n  x = layers.Conv2D(\n      round_filters(32),\n      3,\n      strides=2,\n      padding='valid',\n      use_bias=False,\n      kernel_initializer=CONV_KERNEL_INITIALIZER,\n      name='stem_conv')(\n          x)\n  x = layers.BatchNormalization(axis=bn_axis, name='stem_bn')(x)\n  x = layers.Activation(activation, name='stem_activation')(x)\n  # Build blocks\n  blocks_args = copy.deepcopy(blocks_args)\n  b = 0\n  blocks = float(sum(round_repeats(args['repeats']) for args in blocks_args))\n  for (i, args) in enumerate(blocks_args):\n    assert args['repeats'] > 0\n    # Update block input and output filters based on depth multiplier.\n    args['filters_in'] = round_filters(args['filters_in'])\n    args['filters_out'] = round_filters(args['filters_out'])\n    for j in range(round_repeats(args.pop('repeats'))):",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:454-482"
+    },
+    "67": {
+        "file_id": 6,
+        "content": "This code snippet initializes the EfficientNet model by preprocessing input data, applying a Conv2D layer, batch normalization, and activation function. It also creates blocks using given arguments and updates filters based on depth multiplier.",
+        "type": "comment"
+    },
+    "68": {
+        "file_id": 6,
+        "content": "      # The first block needs to take care of stride and filter size increase.\n      if j > 0:\n        args['strides'] = 1\n        args['filters_in'] = args['filters_out']\n      x = block(\n          x,\n          activation,\n          drop_connect_rate * b / blocks,\n          name='block{}{}_'.format(i + 1, chr(j + 97)),\n          **args)\n      if include_film:\n        with tf.compat.v1.variable_scope('film_conditioning'):\n          x = FilmConditioning(num_channels=x.shape[-1])(x, context_input)\n      b += 1\n  # Build top\n  x = layers.Conv2D(\n      round_filters(1280),\n      1,\n      padding='same',\n      use_bias=False,\n      kernel_initializer=CONV_KERNEL_INITIALIZER,\n      name='top_conv')(\n          x)\n  x = layers.BatchNormalization(axis=bn_axis, name='top_bn')(x)\n  x = layers.Activation(activation, name='top_activation')(x)\n  if include_top:\n    x = layers.GlobalAveragePooling2D(name='avg_pool')(x)\n    if dropout_rate > 0:\n      x = layers.Dropout(dropout_rate, name='top_dropout')(x)\n    validate_activation(classifier_activation, weights)",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:483-513"
+    },
+    "69": {
+        "file_id": 6,
+        "content": "Code block builds an EfficientNet encoder with blocks of various sizes, applying activation functions and optional Film conditioning. It then applies a Conv2D layer, BatchNormalization, Activation, GlobalAveragePooling2D (if include_top is True), and potentially Dropout (if dropout_rate is greater than 0).",
+        "type": "comment"
+    },
+    "70": {
+        "file_id": 6,
+        "content": "    x = layers.Dense(\n        classes,\n        activation=classifier_activation,\n        kernel_initializer=DENSE_KERNEL_INITIALIZER,\n        name='predictions')(\n            x)\n  else:\n    if pooling == 'avg':\n      x = layers.GlobalAveragePooling2D(name='avg_pool')(x)\n    elif pooling == 'max':\n      x = layers.GlobalMaxPooling2D(name='max_pool')(x)\n  # Ensure that the model takes into account\n  # any potential predecessors of `input_tensor`.\n  if input_tensor is not None:\n    inputs = tf.keras.utils.get_source_inputs(input_tensor)\n  else:\n    inputs = img_input\n    if include_film:\n      inputs = (img_input, context_input)\n  # Create model.\n  model = tf.keras.Model(inputs, x, name=model_name)\n  # Load weights.\n  if weights == 'imagenet':\n    if include_top:\n      key = model_name\n    else:\n      key = model_name + '_notop'\n    weights_path = os.path.join(os.path.dirname(__file__), WEIGHTS_PATHS[key])\n    model.load_weights(weights_path, skip_mismatch=False, by_name=False)\n  elif weights is not None:\n    model.load_weights(weights, skip_mismatch=False, by_name=False)",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:514-547"
+    },
+    "71": {
+        "file_id": 6,
+        "content": "This code snippet is part of a model construction process. It creates a dense layer with the specified number of classes, applies activation function, and initializes kernel with a specific value. Depending on the pooling method, it uses GlobalAveragePooling2D or GlobalMaxPooling2D. It ensures that the model considers any potential predecessors of input_tensor. It creates a model using tf.keras.Model, specifying inputs and output. If weights are specified as 'imagenet', it loads weights accordingly; otherwise, if weights are provided, it loads them.",
+        "type": "comment"
+    },
+    "72": {
+        "file_id": 6,
+        "content": "  return model\ndef block(inputs,\n          activation='swish',\n          drop_rate=0.,\n          name='',\n          filters_in=32,\n          filters_out=16,\n          kernel_size=3,\n          strides=1,\n          expand_ratio=1,\n          se_ratio=0.,\n          id_skip=True):\n  \"\"\"An inverted residual block.\n  Args:\n      inputs: input tensor.\n      activation: activation function.\n      drop_rate: float between 0 and 1, fraction of the input units to drop.\n      name: string, block label.\n      filters_in: integer, the number of input filters.\n      filters_out: integer, the number of output filters.\n      kernel_size: integer, the dimension of the convolution window.\n      strides: integer, the stride of the convolution.\n      expand_ratio: integer, scaling coefficient for the input filters.\n      se_ratio: float between 0 and 1, fraction to squeeze the input filters.\n      id_skip: boolean.\n  Returns:\n      output tensor for the block.\n  \"\"\"\n  bn_axis = 3 if tf.keras.backend.image_data_format() == 'channels_last' else 1",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:548-580"
+    },
+    "73": {
+        "file_id": 6,
+        "content": "This code defines an inverted residual block function, which takes inputs and various arguments such as activation function, drop rate, etc. It returns the output tensor for the block after applying convolutions, Batch Normalization, and other operations.",
+        "type": "comment"
+    },
+    "74": {
+        "file_id": 6,
+        "content": "  # Expansion phase\n  filters = filters_in * expand_ratio\n  if expand_ratio != 1:\n    x = layers.Conv2D(\n        filters,\n        1,\n        padding='same',\n        use_bias=False,\n        kernel_initializer=CONV_KERNEL_INITIALIZER,\n        name=name + 'expand_conv')(\n            inputs)\n    x = layers.BatchNormalization(axis=bn_axis, name=name + 'expand_bn')(x)\n    x = layers.Activation(activation, name=name + 'expand_activation')(x)\n  else:\n    x = inputs\n  # Depthwise Convolution\n  if strides == 2:\n    x = layers.ZeroPadding2D(\n        padding=correct_pad(x, kernel_size), name=name + 'dwconv_pad')(\n            x)\n    conv_pad = 'valid'\n  else:\n    conv_pad = 'same'\n  x = layers.DepthwiseConv2D(\n      kernel_size,\n      strides=strides,\n      padding=conv_pad,\n      use_bias=False,\n      depthwise_initializer=CONV_KERNEL_INITIALIZER,\n      name=name + 'dwconv')(\n          x)\n  x = layers.BatchNormalization(axis=bn_axis, name=name + 'bn')(x)\n  x = layers.Activation(activation, name=name + 'activation')(x)\n  # Squeeze and Excitation phase",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:582-617"
+    },
+    "75": {
+        "file_id": 6,
+        "content": "The code implements an Expansion phase, Depthwise Convolution, and Squeeze and Excitation phase in a Convolutional Neural Network (CNN) architecture. It uses Conv2D for expansion, BatchNormalization and Activation functions, and DepthwiseConv2D for depthwise convolution.",
+        "type": "comment"
+    },
+    "76": {
+        "file_id": 6,
+        "content": "  if 0 < se_ratio <= 1:\n    filters_se = max(1, int(filters_in * se_ratio))\n    se = layers.GlobalAveragePooling2D(name=name + 'se_squeeze')(x)\n    if bn_axis == 1:\n      se_shape = (filters, 1, 1)\n    else:\n      se_shape = (1, 1, filters)\n    se = layers.Reshape(se_shape, name=name + 'se_reshape')(se)\n    se = layers.Conv2D(\n        filters_se,\n        1,\n        padding='same',\n        activation=activation,\n        kernel_initializer=CONV_KERNEL_INITIALIZER,\n        name=name + 'se_reduce')(\n            se)\n    se = layers.Conv2D(\n        filters,\n        1,\n        padding='same',\n        activation='sigmoid',\n        kernel_initializer=CONV_KERNEL_INITIALIZER,\n        name=name + 'se_expand')(\n            se)\n    x = layers.multiply([x, se], name=name + 'se_excite')\n  # Output phase\n  x = layers.Conv2D(\n      filters_out,\n      1,\n      padding='same',\n      use_bias=False,\n      kernel_initializer=CONV_KERNEL_INITIALIZER,\n      name=name + 'project_conv')(\n          x)\n  x = layers.BatchNormalization(axis=bn_axis, name=name + 'project_bn')(x)",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:618-653"
+    },
+    "77": {
+        "file_id": 6,
+        "content": "This code applies Squeeze-and-Excite (SE) block for spatial feature recalibration in the encoder part of a model. It calculates and applies a learnable spatially invariant scale to each filter, followed by convolutional layers to produce the SE effect. Then, it performs output phase with a convolution layer and batch normalization.",
+        "type": "comment"
+    },
+    "78": {
+        "file_id": 6,
+        "content": "  if id_skip and strides == 1 and filters_in == filters_out:\n    if drop_rate > 0:\n      x = layers.Dropout(\n          drop_rate, noise_shape=(None, 1, 1, 1), name=name + 'drop')(\n              x)\n    x = layers.add([x, inputs], name=name + 'add')\n  return x\ndef maybe_restore_with_film(\n    *args,\n    weights='imagenet',\n    include_film=False,\n    **kwargs,\n):\n  n1 = EfficientNet(*args, weights=weights, include_film=False, **kwargs)\n  if not include_film:\n    return n1\n  # Copy the model weights over to a new model. This is necessary\n  # in case we have inserted early film layers. In this case,\n  # the pretrained weights will fail to restore properly\n  # unless we do this trick.\n  n2 = EfficientNet(*args, weights=None, include_film=True, **kwargs)\n  # The layers without the film layers.\n  l1 = {l.name: l for l in n1.layers}\n  # The layers with the film layers.\n  l2 = {l.name: l for l in n2.layers}\n  for layer_name, layer in l2.items():\n    if layer_name in l1:\n      layer.set_weights(l1[layer_name].get_weights())",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:654-683"
+    },
+    "79": {
+        "file_id": 6,
+        "content": "This code checks if the skip connection, strides, and number of filters match certain conditions. If so, it may apply a dropout layer and adds inputs with the original input. The function creates two models: one without and one with film layers. It copies weights from the model with film layers to the model without, which is useful if inserting early film layers for proper weight restoration.",
+        "type": "comment"
+    },
+    "80": {
+        "file_id": 6,
+        "content": "    # Annoyingly, the rescaling and normalization layers get different names\n    # in each graph.\n    elif 'rescaling' in layer_name:\n      _, num = layer_name.split('_')\n      l1_layer_name = 'rescaling_' + str(int(num) - 2 or '')\n      l1_layer_name = l1_layer_name.rstrip('_')\n      layer.set_weights(l1[l1_layer_name].get_weights())\n    elif 'normalization' in layer_name:\n      _, num = layer_name.split('_')\n      l1_layer_name = 'normalization_' + str(int(num) - 1 or '')\n      l1_layer_name = l1_layer_name.rstrip('_')\n      layer.set_weights(l1[l1_layer_name].get_weights())\n  return n2\ndef EfficientNetB3(include_top=True,\n                   weights='imagenet',\n                   input_tensor=None,\n                   input_shape=None,\n                   pooling=None,\n                   classes=1000,\n                   classifier_activation='softmax',\n                   include_film=False,\n                   **kwargs):\n  return maybe_restore_with_film(\n      1.2,\n      1.4,\n      300,\n      0.3,\n      model_name='efficientnetb3',",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:684-713"
+    },
+    "81": {
+        "file_id": 6,
+        "content": "The code is a function in the 'film_efficientnet_encoder.py' file that identifies and assigns weights to specific layers within the EfficientNetB3 model based on their names (rescaling or normalization). The function takes input from other functions like 'maybe_restore_with_film' and returns n2.",
+        "type": "comment"
+    },
+    "82": {
+        "file_id": 6,
+        "content": "      include_top=include_top,\n      weights=weights,\n      input_tensor=input_tensor,\n      input_shape=input_shape,\n      pooling=pooling,\n      classes=classes,\n      classifier_activation=classifier_activation,\n      include_film=include_film,\n      **kwargs)\nEfficientNetB3.__doc__ = BASE_DOCSTRING.format(name='EfficientNetB3')\ndef preprocess_input(x, data_format=None):  # pylint: disable=unused-argument\n  \"\"\"A placeholder method for backward compatibility.\n  The preprocessing logic has been included in the efficientnet model\n  implementation. Users are no longer required to call this method to normalize\n  the input data. This method does nothing and only kept as a placeholder to\n  align the API surface between old and new version of model.\n  Args:\n    x: A floating point `numpy.array` or a `tf.Tensor`.\n    data_format: Optional data format of the image tensor/array. Defaults to\n      None, in which case the global setting `tf.keras.image_data_format() is\n      used (unless you changed it, it defaults to \"channels_last\").{mode}",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:714-740"
+    },
+    "83": {
+        "file_id": 6,
+        "content": "The code defines an EfficientNetB3 model with optional input shape, pooling method, and classifier activation function. The preprocess_input function is a placeholder for backward compatibility, as the preprocessing logic has been included in the efficientnet model implementation.",
+        "type": "comment"
+    },
+    "84": {
+        "file_id": 6,
+        "content": "  Returns:\n    Unchanged `numpy.array` or `tf.Tensor`.\n  \"\"\"\n  return x\ndef decode_predictions(preds, top=5):\n  global CLASS_INDEX\n  if CLASS_INDEX is None:\n    with open(os.path.join(os.path.dirname(__file__), IMAGENET_JSON_PATH)) as f:\n      CLASS_INDEX = json.load(f)\n  results = []\n  for pred in preds:\n    top_indices = pred.argsort()[-top:][::-1]\n    result = [tuple(CLASS_INDEX[str(i)]) + (pred[i],) for i in top_indices]\n    result.sort(key=lambda x: x[2], reverse=True)\n    results.append(result)\n  return results",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder.py:742-759"
+    },
+    "85": {
+        "file_id": 6,
+        "content": "Function `decode_predictions` takes in predictions and a top parameter. It sorts the top predicted indices in descending order, then creates a tuple with the class name, score, and index for each of the top predictions. The results are sorted by score in descending order and stored in the 'results' list which is returned at the end.",
+        "type": "comment"
+    },
+    "86": {
+        "file_id": 7,
+        "content": "/film_efficientnet/film_efficientnet_encoder_test.py",
+        "type": "filepath"
+    },
+    "87": {
+        "file_id": 7,
+        "content": "The code tests a 'film_efficientnet' model to detect cats using TensorFlow and skimage. It compares Keras and TF models with EfficientNet encoder for preprocessing and asserts if 'tabby' is in results.",
+        "type": "summary"
+    },
+    "88": {
+        "file_id": 7,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests that film_efficientnet can detect an image of a cat.\"\"\"\nfrom absl.testing import parameterized\nimport numpy as np\nfrom robotics_transformer.film_efficientnet import film_efficientnet_encoder\nfrom skimage import data\nimport tensorflow as tf\nclass FilmEfficientnetTest(tf.test.TestCase, parameterized.TestCase):\n  def _helper(self, include_film, model_variant):\n    if model_variant == 'b0':\n      size = 224\n      fe = film_efficientnet_encoder.EfficientNetB0",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder_test.py:1-28"
+    },
+    "89": {
+        "file_id": 7,
+        "content": "Code snippet is a test file for testing if the film_efficientnet model can detect an image of a cat. It uses TensorFlow, skimage, and includes a helper function to run tests with different model variants (e.g., 'b0') and sizes (e.g., 224).",
+        "type": "comment"
+    },
+    "90": {
+        "file_id": 7,
+        "content": "    elif model_variant == 'b1':\n      size = 240\n      fe = film_efficientnet_encoder.EfficientNetB1\n    elif model_variant == 'b2':\n      size = 260\n      fe = film_efficientnet_encoder.EfficientNetB2\n    elif model_variant == 'b3':\n      size = 300\n      fe = film_efficientnet_encoder.EfficientNetB3\n    elif model_variant == 'b4':\n      size = 380\n      fe = film_efficientnet_encoder.EfficientNetB4\n    elif model_variant == 'b5':\n      size = 456\n      fe = film_efficientnet_encoder.EfficientNetB5\n    elif model_variant == 'b6':\n      size = 528\n      fe = film_efficientnet_encoder.EfficientNetB6\n    elif model_variant == 'b7':\n      size = 600\n      fe = film_efficientnet_encoder.EfficientNetB7\n    else:\n      raise ValueError(f'Unknown variant: {model_variant}')\n    fe = fe(include_top=True, weights='imagenet', include_film=include_film)\n    image = np.expand_dims(data.chelsea(), axis=0)\n    image = tf.image.resize(image, (size, size))\n    context = np.random.randn(1, 512)\n    if include_film:\n      eff_output = fe(",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder_test.py:29-57"
+    },
+    "91": {
+        "file_id": 7,
+        "content": "This code selects a specific EfficientNet model variant based on the provided 'model_variant' and sets its size accordingly. It then initializes the model with the specified parameters ('include_top', 'weights', 'include_film') and resizes the input image to match the selected model's size. If 'include_film' is True, it generates a random context vector and passes it along with the image to the model for processing.",
+        "type": "comment"
+    },
+    "92": {
+        "file_id": 7,
+        "content": "          (film_efficientnet_encoder.preprocess_input(image), context),\n          training=False)\n    else:\n      eff_output = fe(\n          film_efficientnet_encoder.preprocess_input(image), training=False)\n    film_preds = film_efficientnet_encoder.decode_predictions(\n        eff_output.numpy(), top=10)\n    self.assertIn('tabby', [f[1] for f in film_preds[0]])\n  @parameterized.parameters([True, False])\n  def test_keras_equivalence_b3(self, include_film):\n    self._helper(include_film, 'b3')\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/film_efficientnet/film_efficientnet_encoder_test.py:58-73"
+    },
+    "93": {
+        "file_id": 7,
+        "content": "This code tests the equivalence between Keras and TF models using EfficientNet encoder for image preprocessing, decoding predictions and asserting if 'tabby' is included in results.",
+        "type": "comment"
+    },
+    "94": {
+        "file_id": 8,
+        "content": "/film_efficientnet/preprocessors.py",
+        "type": "filepath"
+    },
+    "95": {
+        "file_id": 8,
+        "content": "This function preprocesses images for training, converting data types and cropping while maintaining consistent dimensions to avoid distortions in deep learning models. The code returns the preprocessed images after transformations and resizing.",
+        "type": "summary"
+    },
+    "96": {
+        "file_id": 8,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Preprocessing functions for transforming the image for training.\"\"\"\nfrom typing import Optional\nimport gin\nimport tensorflow.compat.v2 as tf\nCROP_SIZE = 472\n@gin.configurable(\n    denylist=['images', 'crop_size', 'training', 'convert_dtype', 'seed'])\ndef convert_dtype_and_crop_images(images,\n                                  crop_size: int = CROP_SIZE,\n                                  training: bool = True,\n                                  pad_then_crop: bool = False,",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors.py:1-29"
+    },
+    "97": {
+        "file_id": 8,
+        "content": "This code defines a function that performs image preprocessing for training, including converting the image data type and cropping the images to a specified size. The function takes in an input image(s) and optional parameters such as crop size, whether it's being used for training, and whether to pad before cropping.",
+        "type": "comment"
+    },
+    "98": {
+        "file_id": 8,
+        "content": "                                  convert_dtype: bool = True,\n                                  seed: Optional[tf.Tensor] = None):\n  \"\"\"Convert uint8 [512, 640, 3] images to float32 and square crop.\n  Args:\n    images: [B, H, W, 3] uint8 tensor of images.\n    crop_size: Width of the square crop.\n    training: If we are in training (random crop) or not-training (fixed crop).\n    pad_then_crop: If True, pads image and then crops the original image size.\n      This allows full field of view to be extracted.\n    convert_dtype: whether or not to convert the image to float32 in the range\n      of (0, 1).\n    seed: Optional seed of shape (2,) for giving to tf.random.stateless_uniform\n  Returns:\n    [B, crop_size, crop_size, 3] images of dtype float32.\n  \"\"\"\n  if seed is None:\n    seed = tf.random.uniform(shape=(2,), maxval=2**30, dtype=tf.int32)\n  seed2 = tf.random.experimental.stateless_split(seed, num=1)[0]\n  if convert_dtype:\n    images = tf.image.convert_image_dtype(images, tf.float32)\n  image_height = images.get_shape().as_list()[-3]",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors.py:30-55"
+    },
+    "99": {
+        "file_id": 8,
+        "content": "This function takes in uint8 images, converts them to float32, and squares crops. It accepts parameters like crop size, if it's for training or not, pad_then_crop flag, and optional seed for randomness. The output is a tensor of float32 images in the shape [B, crop_size, crop_size, 3].",
+        "type": "comment"
+    }
+}

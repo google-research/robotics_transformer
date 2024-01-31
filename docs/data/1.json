@@ -1,0 +1,542 @@
+{
+    "100": {
+        "file_id": 8,
+        "content": "  image_width = images.get_shape().as_list()[-2]\n  if pad_then_crop:\n    if training:\n      if image_height == 512:\n        ud_pad = 40\n        lr_pad = 100\n      elif image_height == 256:\n        ud_pad = 20\n        lr_pad = 50\n      else:\n        raise ValueError(\n            'convert_dtype_and_crop_images only supports image height 512 or '\n            '256.')\n      max_y = 2 * ud_pad\n      max_x = 2 * lr_pad\n      images = tf.image.pad_to_bounding_box(\n          images,\n          offset_height=ud_pad,\n          offset_width=lr_pad,\n          target_height=image_height + 2 * ud_pad,\n          target_width=image_width + 2 * lr_pad)\n      offset_y = tf.random.stateless_uniform((),\n                                             maxval=max_y + 1,\n                                             dtype=tf.int32,\n                                             seed=seed)\n      offset_x = tf.random.stateless_uniform((),\n                                             maxval=max_x + 1,\n                                             dtype=tf.int32,",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors.py:56-85"
+    },
+    "101": {
+        "file_id": 8,
+        "content": "This code preprocesses images for a model. It first gets the image width, then checks if it should pad and crop the image before resizing it to the target height and width by padding with random offsets. This is useful for maintaining consistent image dimensions and avoiding distortions in deep learning models.",
+        "type": "comment"
+    },
+    "102": {
+        "file_id": 8,
+        "content": "                                             seed=seed2)\n      images = tf.image.crop_to_bounding_box(images, offset_y, offset_x,\n                                             image_height, image_width)\n  else:\n    # Standard cropping.\n    max_y = image_height - crop_size\n    max_x = image_width - crop_size\n    if training:\n      offset_y = tf.random.stateless_uniform((),\n                                             maxval=max_y + 1,\n                                             dtype=tf.int32,\n                                             seed=seed)\n      offset_x = tf.random.stateless_uniform((),\n                                             maxval=max_x + 1,\n                                             dtype=tf.int32,\n                                             seed=seed2)\n      images = tf.image.crop_to_bounding_box(images, offset_y, offset_x,\n                                             crop_size, crop_size)\n    else:\n      images = tf.image.crop_to_bounding_box(images, max_y // 2, max_x // 2,\n                                             crop_size, crop_size)",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors.py:86-107"
+    },
+    "103": {
+        "file_id": 8,
+        "content": "This code performs random cropping on images during training and standard centric cropping during inference. It generates random offset values within the image boundaries using a seed for reproducibility, then crops the images accordingly.",
+        "type": "comment"
+    },
+    "104": {
+        "file_id": 8,
+        "content": "  return images",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors.py:108-108"
+    },
+    "105": {
+        "file_id": 8,
+        "content": "This code snippet is returning the preprocessed images after applying transformations and resizing.",
+        "type": "comment"
+    },
+    "106": {
+        "file_id": 9,
+        "content": "/film_efficientnet/preprocessors_test.py",
+        "type": "filepath"
+    },
+    "107": {
+        "file_id": 9,
+        "content": "This code tests the `convert_dtype_and_crop_images` function in a robotics_transformer package, ensuring correct dtype, image values range, and consistency in crop results for seeded and unseeded runs.",
+        "type": "summary"
+    },
+    "108": {
+        "file_id": 9,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for preprocessors.\"\"\"\nfrom absl.testing import parameterized\nimport numpy as np\nfrom robotics_transformer.film_efficientnet import preprocessors\nfrom tensor2robot.utils import tensorspec_utils\nimport tensorflow.compat.v2 as tf\ndef _random_image(shape):\n  images = tf.random.uniform(\n      shape, minval=0, maxval=255, dtype=tf.dtypes.int32, seed=42)\n  return tf.cast(images, tf.uint8)\ndef _get_features(\n    image_shape=(2, 512, 640, 3), use_task_image=False, use_goal_image=False):",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors_test.py:1-29"
+    },
+    "109": {
+        "file_id": 9,
+        "content": "The code is part of a testing module for preprocessors in the robotics_transformer/film_efficientnet package. It contains utility functions like _random_image and _get_features for generating images and retrieving features, with optional use of task image or goal image.",
+        "type": "comment"
+    },
+    "110": {
+        "file_id": 9,
+        "content": "  # Time-dimension stacking occurs during training but not eval.\n  state = tensorspec_utils.TensorSpecStruct(image=_random_image(image_shape))\n  if use_task_image:\n    state.task_image = _random_image(image_shape)\n  if use_goal_image:\n    state.goal_image = _random_image(image_shape)\n  return state\nclass PreprocessorsTest(tf.test.TestCase, parameterized.TestCase):\n  @parameterized.parameters((True, False, False), (False, True, False),\n                            (True, False, True), (False, True, True))\n  def testConvertDtypeAndCropImages(self, training, pad_then_crop,\n                                    convert_dtype):\n    features = _get_features()\n    images = preprocessors.convert_dtype_and_crop_images(\n        features.image,\n        training=training,\n        pad_then_crop=pad_then_crop,\n        convert_dtype=convert_dtype)\n    expected_cropped_shape = ([2, 512, 640, 3]\n                              if pad_then_crop else [2, 472, 472, 3])\n    tf.ensure_shape(images, expected_cropped_shape)\n    if convert_dtype:",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors_test.py:30-54"
+    },
+    "111": {
+        "file_id": 9,
+        "content": "The code defines a function `convert_dtype_and_crop_images` that takes an image array and modifies its shape based on three parameters: training mode, pad-then-crop method, and dtype conversion. The function returns the modified image with a specific expected cropped shape depending on the parameters. The code also includes a test case `PreprocessorsTest` which tests the function for different combinations of these parameters.",
+        "type": "comment"
+    },
+    "112": {
+        "file_id": 9,
+        "content": "      self.assertEqual(images.dtype, tf.float32)\n      self.assertLessEqual(images.numpy().max(), 1.)\n      self.assertGreaterEqual(images.numpy().min(), 0.)\n    else:\n      self.assertEqual(images.dtype, tf.uint8)\n      self.assertLessEqual(images.numpy().max(), 255)\n      self.assertGreaterEqual(images.numpy().min(), 0)\n      self.assertGreater(images.numpy().max(), 1)\n  def testConvertDtypeAndCropImagesSeeded(self):\n    features = _get_features()\n    seed = tf.constant([1, 2], tf.int32)\n    images1 = preprocessors.convert_dtype_and_crop_images(\n        features.image, training=True, pad_then_crop=True, seed=seed)\n    images2 = preprocessors.convert_dtype_and_crop_images(\n        features.image, training=True, pad_then_crop=True, seed=seed)\n    diff = np.sum(np.abs(images1.numpy() - images2.numpy()))\n    self.assertAlmostEqual(diff, 0)\n  def testConvertDtypeAndCropImagesUnseeded(self):\n    features = _get_features()\n    seed1 = tf.constant([1, 2], tf.int32)\n    images1 = preprocessors.convert_dtype_and_crop_images(",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors_test.py:55-77"
+    },
+    "113": {
+        "file_id": 9,
+        "content": "This code segment contains three test functions for the `convert_dtype_and_crop_images` function. It checks if the dtype of the images is correct, if image values are within expected range, and ensures that crop results from seeded and unseeded runs are almost equal to ensure consistent and repeatable results.",
+        "type": "comment"
+    },
+    "114": {
+        "file_id": 9,
+        "content": "        features.image, training=True, pad_then_crop=True, seed=seed1)\n    seed2 = tf.constant([2, 3], tf.int32)\n    images2 = preprocessors.convert_dtype_and_crop_images(\n        features.image, training=True, pad_then_crop=True, seed=seed2)\n    diff = np.sum(np.abs(images1.numpy() - images2.numpy()))\n    self.assertNotAlmostEqual(diff, 0)",
+        "type": "code",
+        "location": "/film_efficientnet/preprocessors_test.py:78-83"
+    },
+    "115": {
+        "file_id": 9,
+        "content": "This code segment initializes two image arrays, images1 and images2, by calling the preprocessors.convert_dtype_and_crop_images() function with different random seeds for padding and cropping. Then, it calculates the difference between the two resulting arrays using np.sum(np.abs()) and asserts that they are not equal to zero.",
+        "type": "comment"
+    },
+    "116": {
+        "file_id": 10,
+        "content": "/film_efficientnet/pretrained_efficientnet_encoder.py",
+        "type": "filepath"
+    },
+    "117": {
+        "file_id": 10,
+        "content": "The EfficientNetEncoder class initializes and processes images for feature extraction using pre-trained models, handles input image processing, and Film conditioning. It applies convolution and film layers if context is not None, and performs pooling before returning features.",
+        "type": "summary"
+    },
+    "118": {
+        "file_id": 10,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Encoder based on Efficientnet.\"\"\"\nfrom typing import Optional\nimport gin\nfrom robotics_transformer.film_efficientnet import film_conditioning_layer\nfrom robotics_transformer.film_efficientnet import film_efficientnet_encoder\nimport tensorflow as tf\n_MODELS = {\n    'b3': film_efficientnet_encoder.EfficientNetB3,\n}\n_SIZES = {\n    'b3': 300,\n}\n@gin.configurable\nclass EfficientNetEncoder(tf.keras.layers.Layer):\n  \"\"\"Applies a pretrained Efficientnet based encoder.\"\"\"",
+        "type": "code",
+        "location": "/film_efficientnet/pretrained_efficientnet_encoder.py:1-34"
+    },
+    "119": {
+        "file_id": 10,
+        "content": "This code defines an EfficientNet encoder class, which applies a pre-trained EfficientNet model for feature extraction. The EfficientNet models are configured via gin and the available models include 'b3'. The output size of the encoder is specified by 'sizes' dictionary.",
+        "type": "comment"
+    },
+    "120": {
+        "file_id": 10,
+        "content": "  def __init__(self,\n               model_variant: str = 'b3',\n               freeze: bool = False,\n               early_film: bool = True,\n               weights: Optional[str] = 'imagenet',\n               include_top: bool = False,\n               pooling: bool = True,\n               **kwargs):\n    \"\"\"Initialize the model.\n    Args:\n      model_variant: One of 'b0-b7' of the efficient encoders. See\n        https://arxiv.org/abs/1905.11946 to understand the variants.\n      freeze: Whether or not to freeze the pretrained weights (seems to not work\n        well).\n      early_film: Whether to inject film layers into the efficientnet encoder\n        (seems to be essential to getting strong performance).\n      weights: Which pretrained weights to use. Either 'imagenet', a path to the\n        pretrained weights, or None for from scratch.\n      include_top: Whether to add the top fully connected layer. If True, this\n        will cause encoding to fail and is used only for unit testing purposes.\n      pooling: If false, returns feature map before global average pooling",
+        "type": "code",
+        "location": "/film_efficientnet/pretrained_efficientnet_encoder.py:36-57"
+    },
+    "121": {
+        "file_id": 10,
+        "content": "The code initializes a pretrained EfficientNet encoder model, allowing users to specify the variant (B0-B7), whether or not to freeze the pretrained weights, if film layers should be injected, which pretrained weights to use, if the top fully connected layer should be included, and if pooling should be applied.",
+        "type": "comment"
+    },
+    "122": {
+        "file_id": 10,
+        "content": "      **kwargs: Keras specific layer kwargs.\n    \"\"\"\n    super(EfficientNetEncoder, self).__init__(**kwargs)\n    if model_variant not in _MODELS:\n      raise ValueError(f'Unknown variant {model_variant}')\n    self.model_variant = model_variant\n    self.early_film = early_film\n    self.freeze = freeze\n    self.conv1x1 = tf.keras.layers.Conv2D(\n        filters=512,\n        kernel_size=(1, 1),\n        strides=(1, 1),\n        padding='SAME',\n        use_bias=False,\n        kernel_initializer=tf.keras.initializers.VarianceScaling())\n    self.net = _MODELS[model_variant](\n        include_top=include_top,\n        weights=weights,\n        include_film=early_film,\n    )\n    self.film_layer = film_conditioning_layer.FilmConditioning(num_channels=512)\n    self._pooling = pooling\n  def _prepare_image(self, image: tf.Tensor) -> tf.Tensor:\n    \"\"\"Resize the input image and check that the range is correct.\"\"\"\n    if len(image.shape) != 4 or image.shape[-1] != 3:\n      raise ValueError('Provided image should have shape (b, h, w, 3).')",
+        "type": "code",
+        "location": "/film_efficientnet/pretrained_efficientnet_encoder.py:58-84"
+    },
+    "123": {
+        "file_id": 10,
+        "content": "This code defines the EfficientNetEncoder class, initializes its components based on the model variant and other parameters, and includes a method for preparing input images. The EfficientNetEncoder uses a convolutional layer followed by an EfficientNet instance from a predefined list of models, with optional Film conditioning applied early or not at all. It also checks that the input image shape is correct before processing it further.",
+        "type": "comment"
+    },
+    "124": {
+        "file_id": 10,
+        "content": "    size = _SIZES[self.model_variant]\n    if image.shape[1] < size / 4 or image.shape[2] < size / 4:\n      raise ValueError('Provided image is too small.')\n    if image.shape[1] > size * 4 or image.shape[2] > size * 4:\n      raise ValueError('Provided image is too large.')\n    image = tf.image.resize(image, (size, size))\n    c1 = tf.Assert(tf.reduce_max(image) <= 1, data=[tf.reduce_max(image)])\n    c2 = tf.Assert(tf.reduce_min(image) >= 0, data=[tf.reduce_min(image)])\n    with tf.control_dependencies([c1, c2]):\n      image *= 255  # The image is expected to be in range(0, 255).\n      image = film_efficientnet_encoder.preprocess_input(image)\n      return image\n  def _encode(self, image: tf.Tensor, context: tf.Tensor,\n              training: bool) -> tf.Tensor:\n    \"\"\"Run the image through the efficientnet encoder.\"\"\"\n    image = self._prepare_image(image)\n    if self.early_film:\n      return self.net((image, context), training=training)\n    return self.net(image, training=training)\n  def call(self,\n           image: tf.Tensor,",
+        "type": "code",
+        "location": "/film_efficientnet/pretrained_efficientnet_encoder.py:85-107"
+    },
+    "125": {
+        "file_id": 10,
+        "content": "The code ensures the image is resized to a specified size, normalizes it within the range (0, 255), and passes it through an EfficientNet encoder for processing. If the image is too small or large, it raises a ValueError. The function also handles early filming if enabled.",
+        "type": "comment"
+    },
+    "126": {
+        "file_id": 10,
+        "content": "           context: Optional[tf.Tensor] = None,\n           training: bool = True) -> tf.Tensor:\n    if self.freeze:\n      features = tf.stop_gradient(self._encode(image, context, training))\n    else:\n      features = self._encode(image, context, training)\n    if context is not None:\n      features = self.conv1x1(features)\n      features = self.film_layer(features, context)\n    if not self._pooling:\n      return features\n    # Global average pool.\n    return tf.reduce_mean(features, [1, 2])",
+        "type": "code",
+        "location": "/film_efficientnet/pretrained_efficientnet_encoder.py:108-122"
+    },
+    "127": {
+        "file_id": 10,
+        "content": "This code defines a function that takes an image, optional context, and training state as input. If the model is frozen, it applies stop_gradient to the output of _encode function. Otherwise, it directly calls _encode. It then applies convolution and film layer if context is not None. Finally, if pooling is disabled, it returns the features; otherwise, it performs global average pooling on the features and returns the result.",
+        "type": "comment"
+    },
+    "128": {
+        "file_id": 11,
+        "content": "/film_efficientnet/pretrained_efficientnet_encoder_test.py",
+        "type": "filepath"
+    },
+    "129": {
+        "file_id": 11,
+        "content": "This code tests the pretrained EfficientNet encoder's image encoding and classification capabilities using a cat image, checking for correct shape and predicting 'tabby'.",
+        "type": "summary"
+    },
+    "130": {
+        "file_id": 11,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for pretrained_efficientnet_encoder.\"\"\"\nimport numpy as np\nfrom robotics_transformer.film_efficientnet import film_efficientnet_encoder\nfrom robotics_transformer.film_efficientnet import pretrained_efficientnet_encoder as eff\nfrom skimage import data\nimport tensorflow as tf\nclass PretrainedEfficientnetEncoderTest(tf.test.TestCase):\n  def test_encoding(self):\n    \"\"\"Test that we get a correctly shaped decoding.\"\"\"\n    state = np.random.RandomState(0)",
+        "type": "code",
+        "location": "/film_efficientnet/pretrained_efficientnet_encoder_test.py:1-27"
+    },
+    "131": {
+        "file_id": 11,
+        "content": "This code snippet appears to be a test case for the `pretrained_efficientnet_encoder` in the `robotics_transformer.film_efficientnet` module. It uses TensorFlow and NumPy libraries, as well as some custom modules. The test checks if the encoding performed by the encoder is correctly shaped.",
+        "type": "comment"
+    },
+    "132": {
+        "file_id": 11,
+        "content": "    context = state.uniform(-1, 1, (10, 512))\n    model = eff.EfficientNetEncoder()\n    image = np.expand_dims(data.chelsea(), axis=0) / 255\n    preds = model(image, context, training=False).numpy()\n    self.assertEqual(preds.shape, (10, 512))\n  def test_imagenet_classification(self):\n    \"\"\"Test that we can correctly classify an image of a cat.\"\"\"\n    state = np.random.RandomState(0)\n    context = state.uniform(-1, 1, (10, 512))\n    model = eff.EfficientNetEncoder(include_top=True)\n    image = np.expand_dims(data.chelsea(), axis=0) / 255\n    preds = model._encode(image, context, training=False).numpy()\n    predicted_names = [\n        n[1]\n        for n in film_efficientnet_encoder.decode_predictions(preds, top=3)[0]\n    ]\n    self.assertIn('tabby', predicted_names)\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/film_efficientnet/pretrained_efficientnet_encoder_test.py:28-49"
+    },
+    "133": {
+        "file_id": 11,
+        "content": "This code tests the image classification capabilities of a pre-trained EfficientNet model. It uses an image of a cat, checks if 'tabby' is among the top three predicted names, and ensures the output has the correct shape.",
+        "type": "comment"
+    },
+    "134": {
+        "file_id": 12,
+        "content": "/requirements.txt",
+        "type": "filepath"
+    },
+    "135": {
+        "file_id": 12,
+        "content": "This is a requirements file for the robotics_transformer project, listing dependencies including absl-py, numpy, tensorflow, tensorflow-serving-api, gin-config, tf-agents, and tf-slim. It also includes a git repository for tensor2robot integration.",
+        "type": "summary"
+    },
+    "136": {
+        "file_id": 12,
+        "content": "absl-py>=0.5.0\nnumpy>=1.13.3\ntensorflow>=1.13.0\ntensorflow-serving-api>=1.13.0\ngin-config>=0.1.4\ntensorflow-probability>=0.6.0\ntf-agents>=0.3.0\ntf-slim>=1.0\ngit+https://github.com/google-research/tensor2robot#tensor2robot",
+        "type": "code",
+        "location": "/requirements.txt:1-9"
+    },
+    "137": {
+        "file_id": 12,
+        "content": "This is a requirements file for the robotics_transformer project, listing dependencies including absl-py, numpy, tensorflow, tensorflow-serving-api, gin-config, tf-agents, and tf-slim. It also includes a git repository for tensor2robot integration.",
+        "type": "comment"
+    },
+    "138": {
+        "file_id": 13,
+        "content": "/sequence_agent.py",
+        "type": "filepath"
+    },
+    "139": {
+        "file_id": 13,
+        "content": "This code includes a SequenceAgent class for outputting actions and an RL agent class with methods for initializing the actor network, training, and calculating loss. It handles gradients, adds summaries, and returns LossInfo.",
+        "type": "summary"
+    },
+    "140": {
+        "file_id": 13,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Sequence policy and agent that directly output actions via actor network.\nThese classes are not intended to change as they are generic enough for any\nall-neural actor based agent+policy. All new features are intended to be\nimplemented in `actor_network` and `loss_fn`.\n\"\"\"\nfrom typing import Optional, Type\nfrom absl import logging\nimport tensorflow as tf\nfrom tf_agents.agents import data_converter\nfrom tf_agents.agents import tf_agent\nfrom tf_agents.networks import network",
+        "type": "code",
+        "location": "/sequence_agent.py:1-26"
+    },
+    "141": {
+        "file_id": 13,
+        "content": "This code file contains a sequence policy and agent that directly output actions via an actor network. These classes are generic and not intended to change. The file imports necessary libraries for TensorFlow Agents, including data converter, TF agent, and networks.",
+        "type": "comment"
+    },
+    "142": {
+        "file_id": 13,
+        "content": "from tf_agents.policies import actor_policy\nfrom tf_agents.trajectories import policy_step\nfrom tf_agents.trajectories import time_step as ts\nfrom tf_agents.typing import types\nfrom tf_agents.utils import nest_utils\nclass SequencePolicy(actor_policy.ActorPolicy):\n  \"\"\"A policy that directly outputs actions via an actor network.\"\"\"\n  def __init__(self, **kwargs):\n    self._actions = None\n    super().__init__(**kwargs)\n  def set_actions(self, actions):\n    self._actor_network.set_actions(actions)\n  def get_actor_loss(self):\n    return self._actor_network.get_actor_loss()\n  def get_aux_info(self):\n    return self._actor_network.get_aux_info()\n  def set_training(self, training):\n    self._training = training\n  def _action(self,\n              time_step: ts.TimeStep,\n              policy_state: types.NestedTensor,\n              seed: Optional[types.Seed] = None) -> policy_step.PolicyStep:\n    del seed\n    action, policy_state = self._apply_actor_network(\n        time_step.observation,\n        step_type=time_step.step_type,",
+        "type": "code",
+        "location": "/sequence_agent.py:27-60"
+    },
+    "143": {
+        "file_id": 13,
+        "content": "The code defines a class `SequencePolicy` that inherits from `actor_policy.ActorPolicy`. It sets the actions, gets actor loss and auxiliary information, sets training mode, and applies an actor network to get actions for given time steps and policy states.",
+        "type": "comment"
+    },
+    "144": {
+        "file_id": 13,
+        "content": "        policy_state=policy_state)\n    info = ()\n    return policy_step.PolicyStep(action, policy_state, info)\n  def _distribution(self, time_step, policy_state):\n    current_step = super()._distribution(time_step, policy_state)\n    return current_step\nclass SequenceAgent(tf_agent.TFAgent):\n  \"\"\"A sequence agent that directly outputs actions via an actor network.\"\"\"\n  def __init__(self,\n               time_step_spec: ts.TimeStep,\n               action_spec: types.NestedTensorSpec,\n               actor_network: Type[network.Network],\n               actor_optimizer: tf.keras.optimizers.Optimizer,\n               policy_cls: Type[actor_policy.ActorPolicy] = SequencePolicy,\n               time_sequence_length: int = 6,\n               debug_summaries: bool = False,\n               **kwargs):\n    self._info_spec = ()\n    self._actor_network = actor_network(  # pytype: disable=missing-parameter  # dynamic-method-lookup\n        input_tensor_spec=time_step_spec.observation,\n        output_tensor_spec=action_spec,\n        policy_info_spec=self._info_spec,",
+        "type": "code",
+        "location": "/sequence_agent.py:61-86"
+    },
+    "145": {
+        "file_id": 13,
+        "content": "This code defines a SequenceAgent class that extends the tf_agent.TFAgent class and includes an actor network for generating actions. The agent takes time step and policy state as inputs and returns action, policy state, and info. It also has an _info_spec attribute to specify the information returned by the policy step.",
+        "type": "comment"
+    },
+    "146": {
+        "file_id": 13,
+        "content": "        train_step_counter=kwargs['train_step_counter'],\n        time_sequence_length=time_sequence_length)\n    self._actor_optimizer = actor_optimizer\n    # Train policy is only used for loss and never exported as saved_model.\n    self._train_policy = policy_cls(\n        time_step_spec=time_step_spec,\n        action_spec=action_spec,\n        info_spec=self._info_spec,\n        actor_network=self._actor_network,\n        training=True)\n    collect_policy = policy_cls(\n        time_step_spec=time_step_spec,\n        action_spec=action_spec,\n        info_spec=self._info_spec,\n        actor_network=self._actor_network,\n        training=False)\n    super(SequenceAgent, self).__init__(\n        time_step_spec,\n        action_spec,\n        collect_policy,  # We use the collect_policy as the eval policy.\n        collect_policy,\n        train_sequence_length=time_sequence_length,\n        **kwargs)\n    self._data_context = data_converter.DataContext(\n        time_step_spec=time_step_spec,\n        action_spec=action_spec,\n        info_spec=collect_policy.info_spec,",
+        "type": "code",
+        "location": "/sequence_agent.py:87-114"
+    },
+    "147": {
+        "file_id": 13,
+        "content": "The code defines a SequenceAgent class with train and collect policies, initializes the actor optimizer, and sets up the data context for time steps, actions, and information specification. The collect policy is used as the eval policy as well.",
+        "type": "comment"
+    },
+    "148": {
+        "file_id": 13,
+        "content": "        use_half_transition=True)\n    self.as_transition = data_converter.AsHalfTransition(\n        self._data_context, squeeze_time_dim=False)\n    self._debug_summaries = debug_summaries\n    num_params = 0\n    for weight in self._actor_network.trainable_weights:\n      weight_params = 1\n      for dim in weight.shape:\n        weight_params *= dim\n      logging.info('%s has %s params.', weight.name, weight_params)\n      num_params += weight_params\n    logging.info('Actor network has %sM params.', round(num_params / 1000000.,\n                                                        2))\n  def _train(self, experience: types.NestedTensor,\n             weights: types.Tensor) -> tf_agent.LossInfo:\n    self.train_step_counter.assign_add(1)\n    loss_info = self._loss(experience, weights, training=True)\n    self._apply_gradients(loss_info.loss)\n    return loss_info\n  def _apply_gradients(self, loss: types.Tensor):\n    variables = self._actor_network.trainable_weights\n    gradients = tf.gradients(loss, variables)\n    # Skip nan and inf gradients.",
+        "type": "code",
+        "location": "/sequence_agent.py:115-140"
+    },
+    "149": {
+        "file_id": 13,
+        "content": "The code defines a class with methods for initializing the actor network, training the agent using experience and weights, and applying gradients. It also prints the number of parameters in the actor network.",
+        "type": "comment"
+    },
+    "150": {
+        "file_id": 13,
+        "content": "    new_gradients = []\n    for g in gradients:\n      if g is not None:\n        new_g = tf.where(\n            tf.math.logical_or(tf.math.is_inf(g), tf.math.is_nan(g)),\n            tf.zeros_like(g), g)\n        new_gradients.append(new_g)\n      else:\n        new_gradients.append(g)\n    grads_and_vars = list(zip(new_gradients, variables))\n    self._actor_optimizer.apply_gradients(grads_and_vars)\n  def _loss(self, experience: types.NestedTensor, weights: types.Tensor,\n            training: bool) -> tf_agent.LossInfo:\n    transition = self.as_transition(experience)\n    time_steps, policy_steps, _ = transition\n    batch_size = nest_utils.get_outer_shape(time_steps, self._time_step_spec)[0]\n    policy = self._train_policy\n    policy.set_actions(policy_steps.action)\n    policy.set_training(training=training)\n    with tf.name_scope('actor_loss'):\n      policy_state = policy.get_initial_state(batch_size)\n      policy.action(time_steps, policy_state=policy_state)\n      valid_mask = tf.cast(~time_steps.is_last(), tf.float32)",
+        "type": "code",
+        "location": "/sequence_agent.py:141-164"
+    },
+    "151": {
+        "file_id": 13,
+        "content": "This code snippet is part of a reinforcement learning agent. It handles gradients and applies them to variables using an optimizer. The '_loss' function calculates the loss for the policy in training mode, taking into account actions, time steps, and valid masking.",
+        "type": "comment"
+    },
+    "152": {
+        "file_id": 13,
+        "content": "      loss = valid_mask * policy.get_actor_loss()\n      loss = tf.reduce_mean(loss)\n      policy.set_actions(None)\n      self._actor_network.add_summaries(time_steps.observation,\n                                        policy.get_aux_info(),\n                                        self._debug_summaries, training)\n      return tf_agent.LossInfo(loss=loss, extra=loss)",
+        "type": "code",
+        "location": "/sequence_agent.py:165-171"
+    },
+    "153": {
+        "file_id": 13,
+        "content": "The code calculates the actor loss by multiplying it with the valid mask, then reduces the mean of the loss. It sets the actions to None and adds summaries for the observations using the actor network's auxiliary information. Finally, it returns a LossInfo object containing the loss and extra information (which is just the loss in this case).",
+        "type": "comment"
+    },
+    "154": {
+        "file_id": 14,
+        "content": "/sequence_agent_test.py",
+        "type": "filepath"
+    },
+    "155": {
+        "file_id": 14,
+        "content": "This code is for testing the SequenceAgent in TensorFlow using tf_agents library. It defines a class SequenceAgentTest that inherits from SequenceAgentTestSetUp and includes a testAsTransitionType method. This method creates an agent, checks if its as_transition attribute is of type data_converter.AsHalfTransition, and asserts it to be true. The code also includes licensing information and main function to run the tests.",
+        "type": "summary"
+    },
+    "156": {
+        "file_id": 14,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for sequence_agent.\"\"\"\nfrom robotics_transformer.sequence_agent_test_set_up import SequenceAgentTestSetUp\nimport tensorflow as tf\nfrom tf_agents.agents import data_converter\nclass SequenceAgentTest(SequenceAgentTestSetUp):\n  def testAsTransitionType(self):\n    agent = self.create_agent_and_initialize()\n    self.assertIsInstance(agent.as_transition, data_converter.AsHalfTransition)\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/sequence_agent_test.py:1-28"
+    },
+    "157": {
+        "file_id": 14,
+        "content": "This code is for testing the SequenceAgent in TensorFlow using tf_agents library. It defines a class SequenceAgentTest that inherits from SequenceAgentTestSetUp and includes a testAsTransitionType method. This method creates an agent, checks if its as_transition attribute is of type data_converter.AsHalfTransition, and asserts it to be true. The code also includes licensing information and main function to run the tests.",
+        "type": "comment"
+    },
+    "158": {
+        "file_id": 15,
+        "content": "/sequence_agent_test_set_up.py",
+        "type": "filepath"
+    },
+    "159": {
+        "file_id": 15,
+        "content": "The code sets up tests for SequenceAgent in robotics transformer model, initializes agent and policy saver, creates time step specifications, defines action and state specifications, and tracks training steps.",
+        "type": "summary"
+    },
+    "160": {
+        "file_id": 15,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for sequence_agent.\"\"\"\nfrom typing import Type\nimport numpy as np\nfrom robotics_transformer import sequence_agent\nfrom tensor2robot.utils import tensorspec_utils\nimport tensorflow as tf\nfrom tf_agents.networks import network\nfrom tf_agents.policies import policy_saver\nfrom tf_agents.specs import tensor_spec\nfrom tf_agents.trajectories import time_step as ts\nclass DummyActorNet(network.Network):\n  \"\"\"Used for testing SequenceAgent and its subclass.\"\"\"",
+        "type": "code",
+        "location": "/sequence_agent_test_set_up.py:1-28"
+    },
+    "161": {
+        "file_id": 15,
+        "content": "This code sets up test functions for the \"sequence_agent\" in the \"robotics_transformer\" package. It defines a DummyActorNet class, which is used to test SequenceAgent and its subclasses. The code also imports necessary libraries and modules such as TensorFlow, tf-agents, and numpy.",
+        "type": "comment"
+    },
+    "162": {
+        "file_id": 15,
+        "content": "  def __init__(self,\n               output_tensor_spec=None,\n               train_step_counter=None,\n               policy_info_spec=None,\n               time_sequence_length=1,\n               use_tcl=False,\n               **kwargs):\n    super().__init__(**kwargs)\n  @property\n  def tokens_per_action(self):\n    return 8\n  def set_actions(self, actions):\n    self._actions = actions\n  def get_actor_loss(self):\n    return self._actor_loss\n  def call(self,\n           observations,\n           step_type,\n           network_state,\n           actions=None,\n           training=False):\n    del step_type\n    image = observations['image']\n    tf.expand_dims(tf.reduce_mean(image, axis=-1), -1)\n    actions = tensorspec_utils.TensorSpecStruct(\n        world_vector=tf.constant(1., shape=[1, 3]),\n        rotation_delta=tf.constant(1., shape=[1, 3]),\n        terminate_episode=tf.constant(1, shape=[1, 2]),\n        gripper_closedness_action=tf.constant(1., shape=[1, 1]),\n    )\n    return actions, network_state\n  @property\n  def trainable_weights(self):",
+        "type": "code",
+        "location": "/sequence_agent_test_set_up.py:30-67"
+    },
+    "163": {
+        "file_id": 15,
+        "content": "This code defines a class for an agent used in robotics transformer, with properties such as tokens_per_action and trainable_weights. It has methods to set actions, calculate actor loss, and handle observations and network states during training or execution. The class also supports setting actions and retrieving actor loss values.",
+        "type": "comment"
+    },
+    "164": {
+        "file_id": 15,
+        "content": "    return [tf.Variable(1.0)]\nclass SequenceAgentTestSetUp(tf.test.TestCase):\n  \"\"\"Defines spec for testing SequenceAgent and its subclass, tests create.\"\"\"\n  def setUp(self):\n    super().setUp()\n    self._action_spec = tensorspec_utils.TensorSpecStruct()\n    self._action_spec.world_vector = tensor_spec.BoundedTensorSpec(\n        (3,), dtype=tf.float32, minimum=-1., maximum=1., name='world_vector')\n    self._action_spec.rotation_delta = tensor_spec.BoundedTensorSpec(\n        (3,),\n        dtype=tf.float32,\n        minimum=-np.pi / 2,\n        maximum=np.pi / 2,\n        name='rotation_delta')\n    self._action_spec.gripper_closedness_action = tensor_spec.BoundedTensorSpec(\n        (1,),\n        dtype=tf.float32,\n        minimum=-1.,\n        maximum=1.,\n        name='gripper_closedness_action')\n    self._action_spec.terminate_episode = tensor_spec.BoundedTensorSpec(\n        (2,), dtype=tf.int32, minimum=0, maximum=1, name='terminate_episode')\n    state_spec = tensorspec_utils.TensorSpecStruct()\n    state_spec.image = tensor_spec.BoundedTensorSpec([256, 320, 3],",
+        "type": "code",
+        "location": "/sequence_agent_test_set_up.py:68-97"
+    },
+    "165": {
+        "file_id": 15,
+        "content": "The code defines a test set up for the SequenceAgent class and its subclasses. It sets up the action specification, including world vector, rotation delta, gripper closedness action, and terminate episode specifications, as well as a state specification with an image tensor of size [256, 320, 3]. The test set up also includes a variable initialized to 1.0.",
+        "type": "comment"
+    },
+    "166": {
+        "file_id": 15,
+        "content": "                                                     dtype=tf.float32,\n                                                     name='image',\n                                                     minimum=0.,\n                                                     maximum=1.)\n    state_spec.natural_language_embedding = tensor_spec.TensorSpec(\n        shape=[512], dtype=tf.float32, name='natural_language_embedding')\n    self._time_step_spec = ts.time_step_spec(observation_spec=state_spec)\n    self.sequence_agent_cls = sequence_agent.SequenceAgent\n  def create_agent_and_initialize(self,\n                                  actor_network: Type[\n                                      network.Network] = DummyActorNet,\n                                  **kwargs):\n    \"\"\"Creates the agent and initialize it.\"\"\"\n    agent = self.sequence_agent_cls(\n        time_step_spec=self._time_step_spec,\n        action_spec=self._action_spec,\n        actor_network=actor_network,\n        actor_optimizer=tf.keras.optimizers.Adam(),\n        train_step_counter=tf.compat.v1.train.get_or_create_global_step(),",
+        "type": "code",
+        "location": "/sequence_agent_test_set_up.py:98-118"
+    },
+    "167": {
+        "file_id": 15,
+        "content": "The code sets up a test environment for the sequence agent in a robotics transformer model. It defines the image and natural language embedding tensor specifications, creates a time step specification, and initializes the agent with the specified actor network and optimizer. The train_step_counter keeps track of training steps.",
+        "type": "comment"
+    },
+    "168": {
+        "file_id": 15,
+        "content": "        **kwargs)\n    agent.initialize()\n    return agent\n  def testCreateAgent(self):\n    \"\"\"Creates the Agent and save the agent.policy.\"\"\"\n    agent = self.create_agent_and_initialize()\n    self.assertIsNotNone(agent.policy)\n    policy_model_saver = policy_saver.PolicySaver(\n        agent.policy,\n        train_step=tf.compat.v2.Variable(\n            0,\n            trainable=False,\n            dtype=tf.int64,\n            aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA,\n            shape=()),\n        input_fn_and_spec=None)\n    save_options = tf.saved_model.SaveOptions(\n        experimental_io_device='/job:localhost',\n        experimental_custom_gradients=False)\n    policy_model_saver.save('/tmp/unittest/policy/0', options=save_options)\nif __name__ == '__main__':\n  tf.test.main()",
+        "type": "code",
+        "location": "/sequence_agent_test_set_up.py:119-144"
+    },
+    "169": {
+        "file_id": 15,
+        "content": "The code creates an agent and saves its policy using PolicySaver. It initializes the policy saver with a train step variable, specifies save options, and saves the policy model to '/tmp/unittest/policy/0'.",
+        "type": "comment"
+    },
+    "170": {
+        "file_id": 16,
+        "content": "/tokenizers/__init__.py",
+        "type": "filepath"
+    },
+    "171": {
+        "file_id": 16,
+        "content": "This code block is a license notice, specifying the copyright holder and license terms for the file. It references the Apache License, Version 2.0, which governs usage of this code.",
+        "type": "summary"
+    },
+    "172": {
+        "file_id": 16,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.",
+        "type": "code",
+        "location": "/film_efficientnet/__init__.py:1-13"
+    },
+    "173": {
+        "file_id": 16,
+        "content": "This code block is a license notice, specifying the copyright holder and license terms for the file. It references the Apache License, Version 2.0, which governs usage of this code.",
+        "type": "comment"
+    },
+    "174": {
+        "file_id": 17,
+        "content": "/tokenizers/action_tokenizer.py",
+        "type": "filepath"
+    },
+    "175": {
+        "file_id": 17,
+        "content": "The `RT1ActionTokenizer` class in the robotics_transformer library tokenizes and detokenizes actions, normalizing their values as necessary. It manages discrete and continuous dimensions, retains action order, initializes tokenization, and provides relevant information.",
+        "type": "summary"
+    },
+    "176": {
+        "file_id": 17,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"A simple action tokenizer used with Robotics Transformer 1.\nAs an example, if an action is:\nterminate = [0, 1]\nworld_vector = [0.9, 0.8, -0.3]\nrotation_delta = [-0.1, 0.2, .6]\ngripper_closedness = 0.9\nThen we build a sequence of tokens of length 8 [one for each dimension].\nThe int32 type action dimensions are already assumed discrete and tokenized,\nthe float dimensions are bucketed according to the specs min and max. Each\ndimension has 'vocab_size' buckets.",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer.py:1-25"
+    },
+    "177": {
+        "file_id": 17,
+        "content": "This code snippet is from the \"robotics_transformer/tokenizers/action_tokenizer.py\" file and defines a simple action tokenizer for Robotics Transformer 1. It converts actions into sequences of tokens, handling both discrete and continuous dimensions. Discrete dimensions are already tokenized while continuous dimensions are bucketed based on specified min and max values, using 'vocab_size' buckets.",
+        "type": "comment"
+    },
+    "178": {
+        "file_id": 17,
+        "content": "Currently, this tokenizer assumes one action spec and it is highly recommended\nto specify the 'action_order', eg [terminate, world_vector, rotation_delta,\ngripper_closedness]. Since after tokenization you lose that information, this\nwill be useful for debugging. Actions may also be subselected for prediction,\nsince not all actions are needed in the action_order.\n\"\"\"\nfrom typing import Optional\nfrom tensor2robot.utils import tensorspec_utils\nimport tensorflow as tf\nclass RT1ActionTokenizer:\n  \"\"\"Tokenizes based on vocab size.\"\"\"\n  def __init__(self,\n               action_spec: tensorspec_utils.TensorSpecStruct,\n               vocab_size: int,\n               action_order: Optional[list[str]] = None):\n    \"\"\"Instantiates an RT1ActionTokenizer.\n    Args:\n      action_spec: Tensor spec of the expected action tensor.\n      vocab_size: Number of buckets to discretize action to.\n      action_order: Order of the action names, used to discern the order of\n        tokenized actions to detokenize and assemble back to action tensor",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer.py:27-52"
+    },
+    "179": {
+        "file_id": 17,
+        "content": "This code defines a class `RT1ActionTokenizer` that tokenizes actions based on vocabulary size. It takes an action spec, vocab size, and optional action order as input for initialization. The action order helps maintain the order of tokenized actions for detokenization and assembly back to the action tensor.",
+        "type": "comment"
+    },
+    "180": {
+        "file_id": 17,
+        "content": "    \"\"\"\n    self._action_spec = action_spec\n    self._vocab_size = vocab_size\n    if action_order is None:\n      self._action_order = self._action_spec.keys()\n    else:\n      for action in action_order:\n        if action not in self._action_spec.keys():\n          raise ValueError('actions: %s not found in action_spec: %s' %\n                           (action, action_spec.keys()))\n        assert action in self._action_spec.keys()\n      self._action_order = action_order\n    self._tokens_per_action = 0\n    for action in self._action_order:\n      action_shape = self._action_spec[action].shape\n      if len(action_shape) != 1:\n        raise ValueError(\n            'Only action shapes with single dimension supported, got %s' %\n            action_shape)\n      if self._action_spec[action].dtype == tf.int32:\n        # Int32 actions are already assumed to be tokens.\n        self._tokens_per_action += 1\n      else:\n        self._tokens_per_action += action_shape[0]\n    # We measure # of action tokens in two different way. One is by checking",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer.py:53-78"
+    },
+    "181": {
+        "file_id": 17,
+        "content": "This code initializes an action tokenizer. It stores the action_spec and vocab_size, and checks if the action_order is provided. If not, it uses the keys of action_spec as the order. It then iterates over the action order to determine the number of tokens per action. If an action shape doesn't have a single dimension, it raises a ValueError. Finally, it measures the total number of action tokens in two different ways - by checking for int32 actions and calculating the total from non-int32 actions.",
+        "type": "comment"
+    },
+    "182": {
+        "file_id": 17,
+        "content": "    # from action_order (above) and the other is by looping through the\n    # action spec (below). We aseert the # of action tokens are the same\n    # calculated by these two ways. This will assure action_order is correctly\n    # configured, otherwise, it will through an error in the assert.\n    num_action_token = 0\n    for spec in self._action_spec.values():\n      if spec.dtype == tf.int32:\n        num_action_token += 1\n      else:\n        num_action_token += spec.shape[-1]\n    tf.debugging.assert_equal(num_action_token, self._tokens_per_action)\n  @property\n  def tokens_per_action(self) -> int:\n    return self._tokens_per_action\n  @property\n  def action_spec(self) -> tensorspec_utils.TensorSpecStruct:\n    return self._action_spec\n  @property\n  def action_order(self) -> list[str]:\n    return self._action_order\n  def tokenize(self, action: tensorspec_utils.TensorSpecStruct) -> tf.Tensor:\n    \"\"\"Tokenizes an action.\"\"\"\n    action_tokens = []\n    for k in self._action_order:\n      a = action[k]  # a is [batch, actions_size]",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer.py:79-107"
+    },
+    "183": {
+        "file_id": 17,
+        "content": "This code checks if the number of action tokens calculated from 'action_order' and by looping through 'action_spec' are the same, ensuring 'action_order' is correctly configured. It also provides properties to access 'tokens_per_action', 'action_spec', and 'action_order', and a method to tokenize an action.",
+        "type": "comment"
+    },
+    "184": {
+        "file_id": 17,
+        "content": "      spec = self._action_spec[k]\n      if spec.dtype == tf.int32:\n        # Int32 actions are already assumed to be tokens, assume it is smaller\n        # than the vocab size, so all we need to do is pad zeros.\n        tf.debugging.assert_equal(1, tf.reduce_sum(a, axis=-1))\n        # extract the token [batch, 1]\n        token = tf.argmax(a, axis=-1, output_type=tf.int32)\n        tf.debugging.assert_less(token, self._vocab_size)\n        # Add a seq dimension [batch, 1]\n        token = tf.expand_dims(token, axis=-1)\n      else:\n        a = tf.clip_by_value(a, spec.minimum, spec.maximum)\n        # Normalize the action [batch, actions_size]\n        token = (a - spec.minimum) / (spec.maximum - spec.minimum)\n        # Bucket and discretize the action to vocab_size, [batch, actions_size]\n        token = tf.cast(token * (self._vocab_size - 1), tf.int32)\n      action_tokens.append(token)\n    # Append all actions, [batch, all_actions_size]\n    action_tokens = tf.concat(action_tokens, axis=-1)\n    return action_tokens",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer.py:108-127"
+    },
+    "185": {
+        "file_id": 17,
+        "content": "The code is tokenizing actions, assuming the dtype to determine whether the actions are already in token form or need conversion. For int32 dtype, it pads zeros and checks for valid tokens. Otherwise, for other dtypes, it normalizes the action values, discretizes them into a vocabulary size, and appends all actions into a single tensor.",
+        "type": "comment"
+    },
+    "186": {
+        "file_id": 17,
+        "content": "  def detokenize(self,\n                 action_tokens: tf.Tensor) -> tensorspec_utils.TensorSpecStruct:\n    \"\"\"Detokenizes an action.\"\"\"\n    action = tensorspec_utils.TensorSpecStruct()\n    token_index = 0\n    for k in self._action_order:\n      spec = self._action_spec[k]\n      action_dim = spec.shape[0]\n      if spec.dtype == tf.int32:\n        # Int32 actions are already assumed to be tokens.\n        action[k] = action_tokens[..., token_index]\n        # A poor model may output tokens outside the allowed range, in that case\n        # set them to a default value, the 0 token in this case.\n        outside_range = tf.greater_equal(action[k], action_dim)\n        action[k] = tf.where(outside_range, tf.zeros_like(action[k]), action[k])\n        action[k] = tf.one_hot(\n            action[k], depth=action_dim, axis=-1, dtype=tf.int32)\n        token_index += 1\n      else:\n        actions = []\n        for _ in range(action_dim):\n          a = action_tokens[..., token_index:token_index + 1]\n          a = tf.cast(a, tf.float32)",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer.py:129-151"
+    },
+    "187": {
+        "file_id": 17,
+        "content": "This function detokenizes an action by iterating through the action_tokens, considering different data types. If the type is int32, it assumes the tokens are already present and performs necessary checks before converting them into one-hot encoded values. For other data types, it loops through the action dimensions, extracts and casts the corresponding tokens to float32.",
+        "type": "comment"
+    },
+    "188": {
+        "file_id": 17,
+        "content": "          a = a / (self._vocab_size - 1)\n          a = (a * (spec.maximum - spec.minimum)) + spec.minimum\n          actions.append(a)\n          token_index += 1\n        action[k] = tf.concat(actions, axis=-1)\n    return action",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer.py:152-157"
+    },
+    "189": {
+        "file_id": 17,
+        "content": "This code segment is part of the action_tokenizer class in the robotics_transformer library. It performs normalization and concatenation operations on a list of actions (represented as floats) based on specified minimum and maximum values, and appends them to a token index. The resulting list of normalized actions is then concatenated along the last axis and stored in the 'action' dictionary for later use.",
+        "type": "comment"
+    },
+    "190": {
+        "file_id": 18,
+        "content": "/tokenizers/action_tokenizer_test.py",
+        "type": "filepath"
+    },
+    "191": {
+        "file_id": 18,
+        "content": "This code tests the ActionTokenizer module in Python, verifying action tokenization and detokenization accuracy, including handling of episode termination actions, int32 values, and ensuring correct object creation.",
+        "type": "summary"
+    },
+    "192": {
+        "file_id": 18,
+        "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for action_tokenizer.\"\"\"\nimport numpy as np\nfrom robotics_transformer.tokenizers import action_tokenizer\nfrom tensor2robot.utils import tensorspec_utils\nimport tensorflow as tf\nfrom tf_agents.specs import tensor_spec\nclass ActionTokenizerTest(tf.test.TestCase):\n  def testTokenize_int32(self):\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.terminate_episode = tensor_spec.BoundedTensorSpec(\n        (2,), dtype=tf.int32, minimum=0, maximum=1, name='terminate_episode')",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer_test.py:1-27"
+    },
+    "193": {
+        "file_id": 18,
+        "content": "This code is for testing the ActionTokenizer module in Python, which is used to tokenize actions in a robotics transformer model. The test checks the tokenization functionality when dealing with int32 action specifications and ensures that the episode termination action is correctly handled. The code imports necessary libraries, defines the required classes for the test, and sets up the test case.",
+        "type": "comment"
+    },
+    "194": {
+        "file_id": 18,
+        "content": "    tokenizer = action_tokenizer.RT1ActionTokenizer(action_spec, vocab_size=10)\n    self.assertEqual(1, tokenizer.tokens_per_action)\n    action = tensorspec_utils.TensorSpecStruct(terminate_episode=[0, 1])\n    action_tokens = tokenizer.tokenize(action)\n    self.assertEqual([1], action_tokens.numpy())\n  def testTokenize_int32_not_one_hot(self):\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.terminate_episode = tensor_spec.BoundedTensorSpec(\n        (2,), dtype=tf.int32, minimum=0, maximum=1, name='terminate_episode')\n    tokenizer = action_tokenizer.RT1ActionTokenizer(action_spec, vocab_size=10)\n    self.assertEqual(1, tokenizer.tokens_per_action)\n    action = tensorspec_utils.TensorSpecStruct(terminate_episode=[1, 8])\n    with self.assertRaises(tf.errors.InvalidArgumentError):\n      tokenizer.tokenize(action)\n  def testDetokenize_int32(self):\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.terminate_episode = tensor_spec.BoundedTensorSpec(\n        (2,), dtype=tf.int32, minimum=0, maximum=1, name='terminate_episode')",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer_test.py:28-47"
+    },
+    "195": {
+        "file_id": 18,
+        "content": "The code tests the functionality of the RT1ActionTokenizer in various scenarios. The first test checks if tokenizing an action with one token per episode returns a numpy array containing 1. The second test checks if tokenizing an action with non-one-hot int32 values raises a tf.errors.InvalidArgumentError exception. The third test checks the detokenization process for actions encoded as int32 values.",
+        "type": "comment"
+    },
+    "196": {
+        "file_id": 18,
+        "content": "    tokenizer = action_tokenizer.RT1ActionTokenizer(action_spec, vocab_size=10)\n    # 0 token should become a one hot: [1, 0]\n    action = tokenizer.detokenize(tf.constant([0], dtype=tf.int32))\n    self.assertSequenceEqual([1, 0], list(action['terminate_episode'].numpy()))\n    # 1 token should become a one hot: [0, 1]\n    action = tokenizer.detokenize(tf.constant([1], dtype=tf.int32))\n    self.assertSequenceEqual([0, 1], list(action['terminate_episode'].numpy()))\n    # OOV 3 token should become a default one hot: [1, 0]\n    action = tokenizer.detokenize(tf.constant([3], dtype=tf.int32))\n    self.assertSequenceEqual([1, 0], list(action['terminate_episode'].numpy()))\n  def testTokenize_float(self):\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.world_vector = tensor_spec.BoundedTensorSpec(\n        (3,), dtype=tf.float32, minimum=-1., maximum=1., name='world_vector')\n    tokenizer = action_tokenizer.RT1ActionTokenizer(action_spec, vocab_size=10)\n    self.assertEqual(3, tokenizer.tokens_per_action)",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer_test.py:48-64"
+    },
+    "197": {
+        "file_id": 18,
+        "content": "The code tests the action_tokenizer by detokenizing various input actions. For 0 token, it should become [1, 0]. For 1 token, it should become [0, 1]. For an OOV (out-of-vocabulary) 3 token, it should become [1, 0]. The code also tests the action_tokenizer with float input for a bounded tensor spec. It confirms that tokens_per_action is correctly set to 3.",
+        "type": "comment"
+    },
+    "198": {
+        "file_id": 18,
+        "content": "    action = tensorspec_utils.TensorSpecStruct(world_vector=[0.1, 0.5, -0.8])\n    action_tokens = tokenizer.tokenize(action)\n    self.assertSequenceEqual([4, 6, 0], list(action_tokens.numpy()))\n  def testTokenize_float_with_time_dimension(self):\n    action_spec = tensorspec_utils.TensorSpecStruct()\n    action_spec.world_vector = tensor_spec.BoundedTensorSpec(\n        (3,), dtype=tf.float32, minimum=-1., maximum=1., name='world_vector')\n    tokenizer = action_tokenizer.RT1ActionTokenizer(action_spec, vocab_size=10)\n    self.assertEqual(3, tokenizer.tokens_per_action)\n    batch_size = 2\n    time_dimension = 3\n    action = tensorspec_utils.TensorSpecStruct(\n        world_vector=tf.constant(\n            [[0.1, 0.5, -0.8], [0.1, 0.5, -0.8], [0.1, 0.5, -0.8],\n             [0.1, 0.5, -0.8], [0.1, 0.5, -0.8], [0.1, 0.5, -0.8]],\n            shape=[batch_size, time_dimension, tokenizer.tokens_per_action]))\n    action_tokens = tokenizer.tokenize(action)\n    self.assertSequenceEqual(\n        [batch_size, time_dimension, tokenizer.tokens_per_action],",
+        "type": "code",
+        "location": "/tokenizers/action_tokenizer_test.py:65-84"
+    },
+    "199": {
+        "file_id": 18,
+        "content": "In this code, an action tokenizer is being tested. The action_spec defines a tensor with 3 dimensions and bounded values between -1 and 1. The RT1ActionTokenizer is initialized with this action_spec and vocab_size=10. It checks that the tokens_per_action is 3. Then, it creates an action tensor of size [batch_size, time_dimension, tokens_per_action] and tokenizes it using the tokenizer. The code asserts that the resulting action_tokens have the correct shape [batch_size, time_dimension, tokens_per_action].",
+        "type": "comment"
+    }
+}

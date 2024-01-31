@@ -1,0 +1,15 @@
+{
+    "summary": "This code tests the FilmConditioningLayer class from robotics_transformer library's film_efficientnet module, applying it to random convolution and context inputs and ensuring output rank matches expectation. Licensed under Apache License v2.0.",
+    "details": [
+        {
+            "comment": "This code is a test case for the FilmConditioningLayer class. It tests the behavior of the layer for different ranks (2D and 4D) by generating random data, setting batch size, and number of channels. The class is part of the robotics_transformer library's film_efficientnet module, which is licensed under Apache License v2.0.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/film_efficientnet/film_conditioning_layer_test.py\":0-27",
+            "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for film_conditioning_layer.\"\"\"\nfrom absl.testing import parameterized\nimport numpy as np\nfrom robotics_transformer.film_efficientnet import film_conditioning_layer\nimport tensorflow as tf\nclass FilmConditioningLayerTest(tf.test.TestCase, parameterized.TestCase):\n  @parameterized.parameters([2, 4])\n  def test_film_conditioning_rank_two_and_four(self, conv_rank):\n    batch = 2\n    num_channels = 3\n    if conv_rank == 2:\n      conv_layer = np.random.randn(batch, num_channels)"
+        },
+        {
+            "comment": "The code initializes a random convolutional layer and context, creates an instance of FilmConditioningLayer, applies the layer to the convolution and context inputs, and asserts the rank of the output matches the expected rank.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/film_efficientnet/film_conditioning_layer_test.py\":28-39",
+            "content": "    elif conv_rank == 4:\n      conv_layer = np.random.randn(batch, 1, 1, num_channels)\n    else:\n      raise ValueError(f'Unexpected conv rank: {conv_rank}')\n    context = np.random.rand(batch, num_channels)\n    film_layer = film_conditioning_layer.FilmConditioning(num_channels)\n    out = film_layer(conv_layer, context)\n    tf.debugging.assert_rank(out, conv_rank)\nif __name__ == '__main__':\n  tf.test.main()"
+        }
+    ]
+}

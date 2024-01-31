@@ -1,0 +1,15 @@
+{
+    "summary": "This code tests the pretrained EfficientNet encoder's image encoding and classification capabilities using a cat image, checking for correct shape and predicting 'tabby'.",
+    "details": [
+        {
+            "comment": "This code snippet appears to be a test case for the `pretrained_efficientnet_encoder` in the `robotics_transformer.film_efficientnet` module. It uses TensorFlow and NumPy libraries, as well as some custom modules. The test checks if the encoding performed by the encoder is correctly shaped.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/film_efficientnet/pretrained_efficientnet_encoder_test.py\":0-26",
+            "content": "# Copyright 2022 Google LLC\n#\n# Licensed under the Apache License, Version 2.0 (the \"License\");\n# you may not use this file except in compliance with the License.\n# You may obtain a copy of the License at\n#\n#      http://www.apache.org/licenses/LICENSE-2.0\n#\n# Unless required by applicable law or agreed to in writing, software\n# distributed under the License is distributed on an \"AS IS\" BASIS,\n# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n# See the License for the specific language governing permissions and\n# limitations under the License.\n\"\"\"Tests for pretrained_efficientnet_encoder.\"\"\"\nimport numpy as np\nfrom robotics_transformer.film_efficientnet import film_efficientnet_encoder\nfrom robotics_transformer.film_efficientnet import pretrained_efficientnet_encoder as eff\nfrom skimage import data\nimport tensorflow as tf\nclass PretrainedEfficientnetEncoderTest(tf.test.TestCase):\n  def test_encoding(self):\n    \"\"\"Test that we get a correctly shaped decoding.\"\"\"\n    state = np.random.RandomState(0)"
+        },
+        {
+            "comment": "This code tests the image classification capabilities of a pre-trained EfficientNet model. It uses an image of a cat, checks if 'tabby' is among the top three predicted names, and ensures the output has the correct shape.",
+            "location": "\"/media/root/Prima/works/robotics_transformer/docs/src/film_efficientnet/pretrained_efficientnet_encoder_test.py\":27-48",
+            "content": "    context = state.uniform(-1, 1, (10, 512))\n    model = eff.EfficientNetEncoder()\n    image = np.expand_dims(data.chelsea(), axis=0) / 255\n    preds = model(image, context, training=False).numpy()\n    self.assertEqual(preds.shape, (10, 512))\n  def test_imagenet_classification(self):\n    \"\"\"Test that we can correctly classify an image of a cat.\"\"\"\n    state = np.random.RandomState(0)\n    context = state.uniform(-1, 1, (10, 512))\n    model = eff.EfficientNetEncoder(include_top=True)\n    image = np.expand_dims(data.chelsea(), axis=0) / 255\n    preds = model._encode(image, context, training=False).numpy()\n    predicted_names = [\n        n[1]\n        for n in film_efficientnet_encoder.decode_predictions(preds, top=3)[0]\n    ]\n    self.assertIn('tabby', predicted_names)\nif __name__ == '__main__':\n  tf.test.main()"
+        }
+    ]
+}

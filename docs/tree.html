@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="github-markdown.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <title>Project structure of: google-research/robotics_transformer</title>
+    <style>
+        .directory:hover {
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        :target {
+            background-color: yellow !important;
+        }
+
+        .folded::before {
+            content: '\25B6';
+            margin-right: 8px;
+            /* Add space between marker and text */
+        }
+
+        .expanded::before {
+            content: '\25BC';
+            margin-right: 8px;
+            /* Add space between marker and text */
+        }
+    </style>
+    <script>
+        function toggleVisibility(element) {
+            let mclass = element.getAttribute("class");
+            if (mclass == "expanded") {
+                element.setAttribute('class', 'folded');
+            } else {
+                element.setAttribute('class', 'expanded');
+            }
+            const siblings = element.parentNode.children;
+            for (const sibling of siblings) {
+                if (sibling !== element) {
+                    sibling.style.display = (sibling.style.display === 'none') ? 'block' : 'none';
+                }
+            }
+        }
+    </script>
+    <style>
+        .markdown-body {
+            box-sizing: border-box;
+            min-width: 200px;
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 45px;
+        }
+
+        @media (max-width: 767px) {
+            .markdown-body {
+                padding: 15px;
+            }
+
+            .partial-repository-url {
+                display: none;
+            }
+        }
+
+        ul {
+            list-style: none;
+        }
+        #feeling-lucky:hover{
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <article class="markdown-body">
+        <h2>Project structure<span hierarchy="0" class="partial-repository-url"> of: google-research/robotics_transformer</span><div style="float: right;"><a title="Document index" style="margin:3.5px;" href="index.html"><i class="bi bi-search"></i></a><a title="Feeling lucky" style="margin:3.5px;" id="feeling-lucky" href="#"><i class="bi bi-dice-3"></i></a><a title="Expand tree" style="margin:3.5px;" href="tree.html?full=true" id="expand-tree"><i class="bi bi-caret-down-square"></i></a></div></h2>
+<ul>
+<li><span hierarchy="0" class="expanded" onclick="toggleVisibility(this)" ><strong class="directory" id="/"><code>robotics&UnderBar;transformer</code></strong> <em>Efficient Robotics with Diverse Transformers</em></span><ul>
+<li><a class="file_link" href="index.html?q=/__init__.py" id="/__init__.py"><code>&UnderBar;&UnderBar;init&UnderBar;&UnderBar;&period;py</code></a> <em>Robotics Transformer library version 0.1.0, Apache License 2.0, new PyPI release on version change.</em></li>
+<li><span hierarchy="1" class="expanded" onclick="toggleVisibility(this)" ><strong class="directory" id="/configs/"><code>configs</code></strong></span><ul>
+<li><a class="file_link" href="index.html?q=/configs/transformer_mixin.gin" id="/configs/transformer_mixin.gin"><code>transformer&UnderBar;mixin&period;gin</code></a> <em>Configures TransformerNetwork for robotics actor-critic model with Adam optimizer.</em></li>
+</ul>
+</li>
+<li><span hierarchy="1" class="expanded" onclick="toggleVisibility(this)" ><strong class="directory" id="/film_efficientnet/"><code>film&UnderBar;efficientnet</code></strong> <em>Tests EfficientNet film cat detection.</em></span><ul>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/__init__.py" id="/film_efficientnet/__init__.py"><code>&UnderBar;&UnderBar;init&UnderBar;&UnderBar;&period;py</code></a> <em>Apache License, Version 2.0 copyright holder notice.</em></li>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/film_conditioning_layer.py" id="/film_efficientnet/film_conditioning_layer.py"><code>film&UnderBar;conditioning&UnderBar;layer&period;py</code></a> <em>FilmConditioning layer: deep learning FiLM technique for image processing</em></li>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/film_conditioning_layer_test.py" id="/film_efficientnet/film_conditioning_layer_test.py"><code>film&UnderBar;conditioning&UnderBar;layer&UnderBar;test&period;py</code></a> <em>Test: FilmConditioningLayer class, output rank matching.</em></li>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/film_efficientnet_encoder.py" id="/film_efficientnet/film_efficientnet_encoder.py"><code>film&UnderBar;efficientnet&UnderBar;encoder&period;py</code></a> <em>EfficientNet models for Keras image classification</em></li>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/film_efficientnet_encoder_test.py" id="/film_efficientnet/film_efficientnet_encoder_test.py"><code>film&UnderBar;efficientnet&UnderBar;encoder&UnderBar;test&period;py</code></a> <em>FilmEfficientNet cat detection test. Keras vs TF, EfficientNet encoder.</em></li>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/preprocessors.py" id="/film_efficientnet/preprocessors.py"><code>preprocessors&period;py</code></a> <em>Image preprocessing for deep learning models</em></li>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/preprocessors_test.py" id="/film_efficientnet/preprocessors_test.py"><code>preprocessors&UnderBar;test&period;py</code></a> <em>Testing image preprocessor functionality.</em></li>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/pretrained_efficientnet_encoder.py" id="/film_efficientnet/pretrained_efficientnet_encoder.py"><code>pretrained&UnderBar;efficientnet&UnderBar;encoder&period;py</code></a> <em>EfficientNetEncoder: Pre-trained model for feature extraction.</em></li>
+<li><a class="file_link" href="index.html?q=/film_efficientnet/pretrained_efficientnet_encoder_test.py" id="/film_efficientnet/pretrained_efficientnet_encoder_test.py"><code>pretrained&UnderBar;efficientnet&UnderBar;encoder&UnderBar;test&period;py</code></a> <em>Tests EfficientNet encoder's image classification and encoding.</em></li>
+</ul>
+</li>
+<li><a class="file_link" href="index.html?q=/README.md" id="/README.md"><code>README&period;md</code></a> <em>Efficient Robotics Transformer Library for Control</em></li>
+<li><a class="file_link" href="index.html?q=/requirements.txt" id="/requirements.txt"><code>requirements&period;txt</code></a> <em>Robotics transformer: Dependencies, absl-py, numpy, tensorflow.</em></li>
+<li><a class="file_link" href="index.html?q=/sequence_agent.py" id="/sequence_agent.py"><code>sequence&UnderBar;agent&period;py</code></a> <em>RL agent class with SequenceAgent output and training functionality.</em></li>
+<li><a class="file_link" href="index.html?q=/sequence_agent_test.py" id="/sequence_agent_test.py"><code>sequence&UnderBar;agent&UnderBar;test&period;py</code></a> <em>Test SequenceAgent using tf_agents library.</em></li>
+<li><a class="file_link" href="index.html?q=/sequence_agent_test_set_up.py" id="/sequence_agent_test_set_up.py"><code>sequence&UnderBar;agent&UnderBar;test&UnderBar;set&UnderBar;up&period;py</code></a> <em>SequenceAgent test setup and tracking.</em></li>
+<li><span hierarchy="1" class="expanded" onclick="toggleVisibility(this)" ><strong class="directory" id="/tokenizers/"><code>tokenizers</code></strong> <em>Efficient transformer-based tokenizers for robotics.</em></span><ul>
+<li><a class="file_link" href="index.html?q=/tokenizers/__init__.py" id="/tokenizers/__init__.py"><code>&UnderBar;&UnderBar;init&UnderBar;&UnderBar;&period;py</code></a> <em>Apache License 2.0, copyright notice for code file.</em></li>
+<li><a class="file_link" href="index.html?q=/tokenizers/action_tokenizer.py" id="/tokenizers/action_tokenizer.py"><code>action&UnderBar;tokenizer&period;py</code></a> <em>Action tokenizer for robotics transformer library.</em></li>
+<li><a class="file_link" href="index.html?q=/tokenizers/action_tokenizer_test.py" id="/tokenizers/action_tokenizer_test.py"><code>action&UnderBar;tokenizer&UnderBar;test&period;py</code></a> <em>ActionTokenizer test: accuracy, int32 handling, episode termination.</em></li>
+<li><a class="file_link" href="index.html?q=/tokenizers/image_tokenizer.py" id="/tokenizers/image_tokenizer.py"><code>image&UnderBar;tokenizer&period;py</code></a> <em>Image tokenizer using EfficientNet with optional token learner</em></li>
+<li><a class="file_link" href="index.html?q=/tokenizers/image_tokenizer_test.py" id="/tokenizers/image_tokenizer_test.py"><code>image&UnderBar;tokenizer&UnderBar;test&period;py</code></a> <em>Image tokenizer test: checks shape of generated tokens.</em></li>
+<li><a class="file_link" href="index.html?q=/tokenizers/token_learner.py" id="/tokenizers/token_learner.py"><code>token&UnderBar;learner&period;py</code></a> <em>Token Learner TF implementation for robotics transformer</em></li>
+<li><a class="file_link" href="index.html?q=/tokenizers/token_learner_test.py" id="/tokenizers/token_learner_test.py"><code>token&UnderBar;learner&UnderBar;test&period;py</code></a> <em>TokenLearnerModule TensorFlow test. Batch * seq, num_tokens, embedding_dim output.</em></li>
+</ul>
+</li>
+<li><a class="file_link" href="index.html?q=/transformer.py" id="/transformer.py"><code>transformer&period;py</code></a> <em>Transformer layer with configurable parameters</em></li>
+<li><a class="file_link" href="index.html?q=/transformer_network.py" id="/transformer_network.py"><code>transformer&UnderBar;network&period;py</code></a> <em>Transformer network for robotics tasks, with training/inference functions.</em></li>
+<li><a class="file_link" href="index.html?q=/transformer_network_test.py" id="/transformer_network_test.py"><code>transformer&UnderBar;network&UnderBar;test&period;py</code></a> <em>Test transformer network with parameterized tests and masks.</em></li>
+<li><a class="file_link" href="index.html?q=/transformer_network_test_set_up.py" id="/transformer_network_test_set_up.py"><code>transformer&UnderBar;network&UnderBar;test&UnderBar;set&UnderBar;up&period;py</code></a> <em>Configures testing parameters for robotics transformer network setup.</em></li>
+<li><a class="file_link" href="index.html?q=/transformer_test.py" id="/transformer_test.py"><code>transformer&UnderBar;test&period;py</code></a> <em>Transformer model testing in robotics_transformer library.</em></li>
+</ul>
+</li>
+</ul>
+    </article>
+    <script type="text/javascript">
+        function getQueryParams() {
+            var search = window.location.search.substring(1); // Remove leading '?'
+            var queryParams = {};
+            search.split('&').forEach(function (pair) {
+                var parts = pair.split('=');
+                var key = decodeURIComponent(parts[0]);
+                var value = decodeURIComponent(parts[1]);
+                queryParams[key] = value;
+            });
+            return queryParams;
+        }
+
+        const queryParams = getQueryParams(window.location.search);
+        const show_full = queryParams.full == "true";
+        //const is_random = queryParams.random == 'true';
+        function feelingLucky() {
+            var elements = document.getElementsByClassName("file_link");
+            var randomIndex = Math.floor(Math.random() * elements.length);
+            window.location = elements[randomIndex].href;
+        }
+        //if (is_random) {feelingLucky();}
+        document.getElementById("feeling-lucky").onclick = feelingLucky;
+        if (!show_full) {
+            const spans = document.querySelectorAll('span');
+            for (let span of spans) {
+                if (span.getAttribute("hierarchy") == '0') { continue }
+                toggleVisibility(span);
+            }
+        } else {
+            const expand_elem = document.getElementById('expand-tree');
+            expand_elem.setAttribute("href", "tree.html");
+            expand_elem.setAttribute("title", "Undo expand");
+            expand_elem.innerHTML = '<i class="bi bi-caret-up-square"></i>'
+        }
+
+    </script>
+</body>
+
+</html>
